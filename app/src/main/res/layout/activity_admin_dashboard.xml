@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:fillViewport="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvAdminTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Admin Dashboard"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnManageStudents"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="18dp"
+            android:text="Manage Students" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnScanQr"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:text="Scan QR (Attendance)" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnManageAttendance"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:text="Manage Attendance" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewUsers"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:text="View Users" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConnection"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:text="Connection" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAdminSignOut"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:text="Sign Out" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

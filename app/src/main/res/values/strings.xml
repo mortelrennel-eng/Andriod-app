@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FinalProject</string>
+    <string name="login">Sign In</string>
+    <string name="register">Register</string>
+</resources>
