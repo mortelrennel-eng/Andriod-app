@@ -1,11 +1,9 @@
 package com.example.finalproject;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.database.DataSnapshot;
@@ -13,8 +11,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
+import com.journeyapps.barcodescanner.DecoratedBarcodeView;
+import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONObject;
 
@@ -26,28 +24,37 @@ public class QRScannerActivity extends AppCompatActivity {
 
     private static final String TAG = "QRScannerActivity";
     private FirebaseDatabase realtimeDb;
+    private DecoratedBarcodeView barcodeView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_qr_scanner);
+
         realtimeDb = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/");
-        new IntentIntegrator(this).setPrompt("Scan student QR code").setBeepEnabled(true).setOrientationLocked(true).initiateScan();
+        barcodeView = findViewById(R.id.zxing_barcode_scanner);
+
+        barcodeView.decodeSingle(result -> {
+            if (result.getText() != null) {
+                barcodeView.pause(); // Pause scanner after a result is found
+                recordAttendance(result.getText());
+            } else {
+                 Toast.makeText(this, "Scan failed. Please try again.", Toast.LENGTH_SHORT).show();
+                 finish();
+            }
+        });
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-        if (result != null) {
-            if (result.getContents() != null) {
-                recordAttendance(result.getContents());
-            } else {
-                Toast.makeText(this, "Scan cancelled", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
+    protected void onResume() {
+        super.onResume();
+        barcodeView.resume(); // Ensure scanner is running on resume
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        barcodeView.pause(); // Pause scanner to save resources
     }
 
     private void recordAttendance(String studentUid) {
@@ -87,55 +94,41 @@ public class QRScannerActivity extends AppCompatActivity {
                         return;
                     }
 
-                    final String studentName = userSnapshot.child("firstName").getValue(String.class) + " " + userSnapshot.child("lastName").getValue(String.class);
+                    final String studentName = (userSnapshot.child("firstName").getValue(String.class) == null ? "" : userSnapshot.child("firstName").getValue(String.class))
+                            + " " + (userSnapshot.child("lastName").getValue(String.class) == null ? "" : userSnapshot.child("lastName").getValue(String.class));
+                    final String studentSection = userSnapshot.child("section").getValue(String.class);
+
                     DatabaseReference attendanceRef = realtimeDb.getReference("attendance").child(studentUid);
 
-                    attendanceRef.orderByChild("attendanceDay").equalTo(dayDate).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot snap) {
-                            boolean hasIn = false;
-                            boolean hasOut = false;
-                            for (DataSnapshot child : snap.getChildren()) {
-                                String status = child.child("status").getValue(String.class);
-                                if (status != null) {
-                                    if (status.equals("IN") || status.equals("LATE")) hasIn = true;
-                                    if (status.equals("OUT")) hasOut = true;
-                                }
-                            }
-
-                            if (hasIn && hasOut) {
-                                Toast.makeText(QRScannerActivity.this, "Attendance already completed for today (IN and OUT).", Toast.LENGTH_LONG).show();
-                                finish();
-                            } else if (hasIn) {
-                                // Student is logging OUT
-                                writeAttendanceRecord(attendanceRef, studentUid, studentName, "OUT", dayDate, dayTitle);
-                            } else {
-                                // Student is logging IN, check if LATE
-                                try {
-                                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                                    Date now = new Date();
-                                    Date lateTime = timeFormat.parse(lateTimeStr);
-                                    Date currentTime = timeFormat.parse(timeFormat.format(now));
-
-                                    if (currentTime.after(lateTime)) {
-                                        writeAttendanceRecord(attendanceRef, studentUid, studentName, "LATE", dayDate, dayTitle);
-                                    } else {
-                                        writeAttendanceRecord(attendanceRef, studentUid, studentName, "IN", dayDate, dayTitle);
+                    // If current user is an admin, ensure they can only scan students in their section
+                    String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+                    if (currentUid != null) {
+                        realtimeDb.getReference("users").child(currentUid).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot currentUserSnap) {
+                                String role = currentUserSnap.child("role").getValue(String.class);
+                                String adminSection = currentUserSnap.child("section").getValue(String.class);
+                                if ("admin".equals(role)) {
+                                    if (adminSection == null || studentSection == null || !adminSection.equals(studentSection)) {
+                                        Toast.makeText(QRScannerActivity.this, "You are not allowed to scan this student.", Toast.LENGTH_LONG).show();
+                                        finish();
+                                        return;
                                     }
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Time parsing error", e);
-                                    Toast.makeText(QRScannerActivity.this, "Error checking time. Recording as IN.", Toast.LENGTH_SHORT).show();
-                                    writeAttendanceRecord(attendanceRef, studentUid, studentName, "IN", dayDate, dayTitle);
                                 }
+                                // allowed -> proceed
+                                proceedAttendanceCheck(attendanceRef, studentUid, studentName, dayDate, dayTitle, lateTimeStr);
                             }
-                        }
 
-                        @Override
-                        public void onCancelled(DatabaseError error) {
-                            Toast.makeText(QRScannerActivity.this, "Error reading attendance: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                            finish();
-                        }
-                    });
+                            @Override
+                            public void onCancelled(DatabaseError error) {
+                                Toast.makeText(QRScannerActivity.this, "Error checking user role: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        });
+                    } else {
+                        // no signed in user (likely student); proceed
+                        proceedAttendanceCheck(attendanceRef, studentUid, studentName, dayDate, dayTitle, lateTimeStr);
+                    }
                 }
 
                 @Override
@@ -149,6 +142,55 @@ public class QRScannerActivity extends AppCompatActivity {
             Toast.makeText(this, "Critical error with attendance day data.", Toast.LENGTH_LONG).show();
             finish();
         }
+    }
+
+    private void proceedAttendanceCheck(DatabaseReference attendanceRef, String studentUid, String studentName, String dayDate, String dayTitle, String lateTimeStr) {
+        attendanceRef.orderByChild("attendanceDay").equalTo(dayDate).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snap) {
+                boolean hasIn = false;
+                boolean hasOut = false;
+                for (DataSnapshot child : snap.getChildren()) {
+                    String status = child.child("status").getValue(String.class);
+                    if (status != null) {
+                        if (status.equals("IN") || status.equals("LATE")) hasIn = true;
+                        if (status.equals("OUT")) hasOut = true;
+                    }
+                }
+
+                if (hasIn && hasOut) {
+                    Toast.makeText(QRScannerActivity.this, "Attendance already completed for today (IN and OUT).", Toast.LENGTH_LONG).show();
+                    finish();
+                } else if (hasIn) {
+                    // Student is logging OUT
+                    writeAttendanceRecord(attendanceRef, studentUid, studentName, "OUT", dayDate, dayTitle);
+                } else {
+                    // Student is logging IN, check if LATE
+                    try {
+                        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                        Date now = new Date();
+                        Date lateTime = timeFormat.parse(lateTimeStr);
+                        Date currentTime = timeFormat.parse(timeFormat.format(now));
+
+                        if (currentTime.after(lateTime)) {
+                            writeAttendanceRecord(attendanceRef, studentUid, studentName, "LATE", dayDate, dayTitle);
+                        } else {
+                            writeAttendanceRecord(attendanceRef, studentUid, studentName, "IN", dayDate, dayTitle);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Time parsing error", e);
+                        Toast.makeText(QRScannerActivity.this, "Error checking time. Recording as IN.", Toast.LENGTH_SHORT).show();
+                        writeAttendanceRecord(attendanceRef, studentUid, studentName, "IN", dayDate, dayTitle);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Toast.makeText(QRScannerActivity.this, "Error reading attendance: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
     }
 
     private void writeAttendanceRecord(DatabaseReference ref, String uid, String name, String status, String day, String title) {

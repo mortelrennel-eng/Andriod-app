@@ -8,10 +8,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,15 +34,9 @@ import java.util.Locale;
 public class StudentDashboard extends AppCompatActivity {
     private static final String TAG = "StudentDashboard";
     private static final String RTDB_URL = "https://finalproject-b08f4-default-rtdb.firebaseio.com/";
-    private TextView tvName;
-    private TextView tvStudentId;
-    private TextView tvContact;
-    private LinearLayout ebooksContainer;
-    private LinearLayout attendanceContainer;
+    private TextView tvName, tvStudentId, tvContact;
     private ImageView qrImage;
-    private Button btnDownloadQr;
-    private Button btnSignOut;
-    private Button btnOpenEbooks;
+    private Button btnDownloadQr, btnSignOut, btnOpenEbooks, btnViewAttendance, btnSavedEbooks;
 
     private FirebaseAuth mAuth;
     private DatabaseReference usersRef;
@@ -57,34 +49,37 @@ public class StudentDashboard extends AppCompatActivity {
         tvName = findViewById(R.id.tvStudentName);
         tvStudentId = findViewById(R.id.tvStudentId);
         tvContact = findViewById(R.id.tvStudentContact);
-        ebooksContainer = findViewById(R.id.containerEbooks);
-        attendanceContainer = findViewById(R.id.containerAttendance);
         qrImage = findViewById(R.id.ivQrStudent);
         btnDownloadQr = findViewById(R.id.btnDownloadQr);
-    btnOpenEbooks = findViewById(R.id.btnOpenEbooks);
+        btnOpenEbooks = findViewById(R.id.btnOpenEbooks);
         btnSignOut = findViewById(R.id.btnStudentSignOut);
+        btnViewAttendance = findViewById(R.id.btnViewAttendance);
+        btnSavedEbooks = findViewById(R.id.btnSavedEbooks);
 
         mAuth = FirebaseAuth.getInstance();
-    FirebaseDatabase db = FirebaseDatabase.getInstance(RTDB_URL);
-        usersRef = db.getReference("users");
+        usersRef = FirebaseDatabase.getInstance(RTDB_URL).getReference("users");
 
         btnSignOut.setOnClickListener(v -> {
             mAuth.signOut();
-            startActivity(new Intent(StudentDashboard.this, AdminLoginActivity.class));
+            startActivity(new Intent(StudentDashboard.this, MainActivity.class));
             finish();
         });
 
         btnDownloadQr.setOnClickListener(v -> saveQrToGallery());
-    btnOpenEbooks.setOnClickListener(v -> startActivity(new Intent(StudentDashboard.this, EbookListActivity.class)));
-    Button btnSaved = findViewById(R.id.btnSavedEbooks);
-    btnSaved.setOnClickListener(v -> startActivity(new Intent(StudentDashboard.this, SavedEbooksActivity.class)));
+        btnOpenEbooks.setOnClickListener(v -> startActivity(new Intent(StudentDashboard.this, EbookListActivity.class)));
+        btnSavedEbooks.setOnClickListener(v -> startActivity(new Intent(StudentDashboard.this, SavedEbooksActivity.class)));
+
+        // Set listener for the new attendance button
+        btnViewAttendance.setOnClickListener(v -> {
+            startActivity(new Intent(StudentDashboard.this, AttendanceHistoryActivity.class));
+        });
 
         loadProfileAndData();
     }
 
     private void loadProfileAndData() {
         if (mAuth.getCurrentUser() == null) {
-            startActivity(new Intent(this, AdminLoginActivity.class));
+            startActivity(new Intent(this, StudentLoginActivity.class));
             finish();
             return;
         }
@@ -100,61 +95,17 @@ public class StudentDashboard extends AppCompatActivity {
                 String contact = snapshot.child("contactNumber").getValue(String.class);
 
                 tvName.setText((first != null ? first : "") + " " + (last != null ? last : ""));
-                tvStudentId.setText(sid != null ? sid : "");
-                tvContact.setText(contact != null ? contact : "");
+                tvStudentId.setText(sid != null ? "ID: " + sid : "");
+                tvContact.setText(contact != null ? "Contact: " + contact : "");
 
-                // generate QR using uid
+                // Generate and display the QR code
                 generateQr(uid);
-
-                // load ebooks list (from /ebooks)
-                DatabaseReference ebooksRef = FirebaseDatabase.getInstance(RTDB_URL)
-                        .getReference("ebooks");
-                ebooksRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        ebooksContainer.removeAllViews();
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            String title = child.child("title").getValue(String.class);
-                            // url is available if you want to open or download the ebook
-                            TextView t = new TextView(StudentDashboard.this);
-                            t.setText(title != null ? title : "Untitled");
-                            t.setPadding(8,8,8,8);
-                            ebooksContainer.addView(t);
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Log.w(TAG, "loadEbooks:onCancelled", error.toException());
-                    }
-                });
-
-                // load attendance (last 20)
-                DatabaseReference attendanceRef = FirebaseDatabase.getInstance(RTDB_URL)
-                        .getReference("attendance").child(uid);
-                attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        attendanceContainer.removeAllViews();
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            String status = child.child("status").getValue(String.class);
-                            String when = child.child("dateStr").getValue(String.class);
-                            TextView t = new TextView(StudentDashboard.this);
-                            t.setText((when != null ? when : "") + " — " + (status != null ? status : ""));
-                            t.setPadding(8,8,8,8);
-                            attendanceContainer.addView(t);
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Log.w(TAG, "loadAttendance:onCancelled", error.toException());
-                    }
-                });
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) { }
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w(TAG, "loadProfile:onCancelled", error.toException());
+            }
         });
     }
 
@@ -194,9 +145,9 @@ public class StudentDashboard extends AppCompatActivity {
             }
             Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
             if (uri != null) {
-                OutputStream out = getContentResolver().openOutputStream(uri);
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                if (out != null) out.close();
+                try (OutputStream out = getContentResolver().openOutputStream(uri)) {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     values.clear();
                     values.put(MediaStore.Images.Media.IS_PENDING, 0);
@@ -210,4 +161,3 @@ public class StudentDashboard extends AppCompatActivity {
         }
     }
 }
-

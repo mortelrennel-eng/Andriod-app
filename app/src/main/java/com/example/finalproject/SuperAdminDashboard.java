@@ -40,6 +40,7 @@ public class SuperAdminDashboard extends AppCompatActivity {
         setupButton(R.id.btnManageEbooks, EbookManagerActivity.class);
         setupButton(R.id.btnManageStudents, ManageStudentsActivity.class);
         setupButton(R.id.btnManageAttendance, UsersListActivity.class);
+    setupButton(R.id.btnManageSections, ManageSectionsActivity.class);
 
         Button btnSetAttendanceDay = findViewById(R.id.btnSetAttendanceDay);
         if (btnSetAttendanceDay != null) {
@@ -72,7 +73,23 @@ public class SuperAdminDashboard extends AppCompatActivity {
     }
 
     private void checkConnectionAndNavigate(Class<?> targetActivity) {
-        // ... (existing code)
+        DatabaseReference connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+        connectedRef.addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+            @Override
+            public void onDataChange(com.google.firebase.database.DataSnapshot snapshot) {
+                Boolean connected = snapshot.getValue(Boolean.class);
+                if (connected != null && connected) {
+                    Intent intent = new Intent(SuperAdminDashboard.this, targetActivity);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(SuperAdminDashboard.this, "No internet connection. Please check your connection.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onCancelled(com.google.firebase.database.DatabaseError error) {
+                Toast.makeText(SuperAdminDashboard.this, "Connection check failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void showSetAttendanceDayDialog() {

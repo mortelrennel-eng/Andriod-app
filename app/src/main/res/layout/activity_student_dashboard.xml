@@ -8,13 +8,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
         <TextView
             android:id="@+id/tvStudentName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold"
             android:text="Student Name" />
 
@@ -22,7 +23,7 @@
             android:id="@+id/tvStudentId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ID" />
+            android:text="Student ID" />
 
         <TextView
             android:id="@+id/tvStudentContact"
@@ -30,63 +31,48 @@
             android:layout_height="wrap_content"
             android:text="Contact" />
 
+        <!-- QR Code Display -->
         <ImageView
             android:id="@+id/ivQrStudent"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_marginTop="12dp" />
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:layout_marginTop="20dp" />
 
         <Button
             android:id="@+id/btnDownloadQr"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:text="Download QR" />
+
+        <!-- Action Buttons -->
+        <Button
+            android:id="@+id/btnViewAttendance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="View Attendance History" />
 
         <Button
             android:id="@+id/btnOpenEbooks"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Open E-books" />
+            android:text="View E-Books" />
+
         <Button
             android:id="@+id/btnSavedEbooks"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Saved E-books" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="E-books"
-            android:textStyle="bold"
-            android:layout_marginTop="12dp" />
-
-        <LinearLayout
-            android:id="@+id/containerEbooks"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Attendance"
-            android:textStyle="bold"
-            android:layout_marginTop="12dp" />
-
-        <LinearLayout
-            android:id="@+id/containerAttendance"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:text="My Saved E-books" />
 
         <Button
             android:id="@+id/btnStudentSignOut"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="Sign Out"
-            android:layout_marginTop="12dp" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Sign Out" />
 
     </LinearLayout>
 </ScrollView>

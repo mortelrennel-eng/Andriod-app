@@ -39,14 +39,19 @@
         <activity android:name=".AdminRegistrationCompleteActivity" />
         <activity android:name=".UsersListActivity" />
         <activity android:name=".ManageStudentsActivity" />
+    <activity android:name=".ManageSectionsActivity" />
         <activity android:name=".AdminUploadActivity" />
         <activity android:name=".EbookManagerActivity" />
         <activity android:name=".ViewAdminsActivity" />
         <activity android:name=".QRGeneratorActivity" />
+        <activity android:name=".ManageAttendanceActivity" />
 
         <!-- ✅ Student Features -->
         <activity android:name=".StudentDashboard" />
         <activity android:name=".StudentRegisterActivity" />
+        <activity android:name=".AttendanceHistoryActivity" />
+        <activity android:name=".EbookListActivity" />
+        <activity android:name=".SavedEbooksActivity" />
 
         <!-- ✅ Login Pages -->
         <activity android:name=".AdminLoginActivity" />
@@ -54,7 +59,9 @@
         <activity android:name=".StudentLoginActivity" />
 
         <!-- ✅ Utility Activities -->
-        <activity android:name=".QRScannerActivity" />
+        <activity android:name=".QRScannerActivity" 
+                  android:screenOrientation="portrait"
+                  tools:replace="screenOrientation"/>
 
     </application>
 </manifest>

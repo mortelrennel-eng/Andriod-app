@@ -4,9 +4,54 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tvProfile"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="16sp" />
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/edtFirstName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="First Name" />
+
+        <EditText
+            android:id="@+id/edtLastName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Last Name" />
+
+        <EditText
+            android:id="@+id/edtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:enabled="false" />
+
+        <EditText
+            android:id="@+id/edtStudentId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Student ID" />
+
+        <EditText
+            android:id="@+id/edtContact"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Contact" />
+
+        <EditText
+            android:id="@+id/edtSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Section" />
+
+        <Button
+            android:id="@+id/btnSaveStudent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save" />
+
+    </LinearLayout>
+
 </ScrollView>

@@ -106,10 +106,12 @@ public class AdminUploadActivity extends AppCompatActivity {
 
         StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("ebooks/")
                 .child(System.currentTimeMillis() + ".pdf");
-        storageRef.putFile(pickedUri)
-                .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+    // disable upload button while uploading
+    btnUpload.setEnabled(false);
+    storageRef.putFile(pickedUri)
+        .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
                     // write to RTDB
-                    DatabaseReference ebooksRef = FirebaseDatabase.getInstance().getReference("ebooks");
+                    DatabaseReference ebooksRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("ebooks");
                     String key = ebooksRef.push().getKey();
                     Map<String, Object> map = new HashMap<>();
                     map.put("title", title);
@@ -117,15 +119,22 @@ public class AdminUploadActivity extends AppCompatActivity {
                     ebooksRef.child(key).setValue(map)
                             .addOnSuccessListener(aVoid -> {
                                 progress.setVisibility(View.GONE);
-                                Toast.makeText(AdminUploadActivity.this, "Uploaded", Toast.LENGTH_SHORT).show();
+                                btnUpload.setEnabled(true);
+                                new androidx.appcompat.app.AlertDialog.Builder(AdminUploadActivity.this)
+                                        .setTitle("Upload successful")
+                                        .setMessage("E-book uploaded and saved to database.")
+                                        .setPositiveButton("OK", null)
+                                        .show();
                             })
                             .addOnFailureListener(e -> {
                                 progress.setVisibility(View.GONE);
+                                btnUpload.setEnabled(true);
                                 Toast.makeText(AdminUploadActivity.this, "Failed writing metadata", Toast.LENGTH_SHORT).show();
                             });
                 }))
                 .addOnFailureListener(e -> {
                     progress.setVisibility(View.GONE);
+                    btnUpload.setEnabled(true);
                     Toast.makeText(AdminUploadActivity.this, "Upload failed", Toast.LENGTH_SHORT).show();
                 });
     }
