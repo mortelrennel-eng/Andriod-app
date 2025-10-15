@@ -1,102 +1,125 @@
 package com.example.finalproject;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
-
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
+import androidx.appcompat.widget.Toolbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class RegisterAdminActivity extends AppCompatActivity {
 
-    EditText adminFirstName, adminLastName, adminEmail, adminSection, adminPassword;
-    Button registerBtn;
-    FirebaseAuth auth;
-    FirebaseDatabase realtimeDb;
-    DatabaseReference usersRef;
-    android.widget.ProgressBar progressBar;
+    private EditText edtFirstName, edtLastName, edtEmail, edtPassword, edtSection;
+    private Button btnRegister;
+    private ProgressBar progressBar;
+    private FirebaseAuth mAuth;
+    private DatabaseReference usersRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_admin);
 
-        adminFirstName = findViewById(R.id.adminFirstName);
-        adminLastName = findViewById(R.id.adminLastName);
-        adminEmail = findViewById(R.id.adminEmail);
-        adminSection = findViewById(R.id.adminSection);
-        adminPassword = findViewById(R.id.adminPassword);
-        registerBtn = findViewById(R.id.registerBtn);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Register New Admin");
+
+        mAuth = FirebaseAuth.getInstance();
+        usersRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("users");
+
+        edtFirstName = findViewById(R.id.adminFirstName);
+        edtLastName = findViewById(R.id.adminLastName);
+        edtEmail = findViewById(R.id.adminEmail);
+        edtSection = findViewById(R.id.adminSection);
+        edtPassword = findViewById(R.id.adminPassword);
+        btnRegister = findViewById(R.id.registerBtn);
         progressBar = findViewById(R.id.progressBarAdminRegister);
 
-        auth = FirebaseAuth.getInstance();
-        realtimeDb = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/");
-        usersRef = realtimeDb.getReference("users");
-
-        registerBtn.setOnClickListener(v -> registerAdmin());
+        btnRegister.setOnClickListener(v -> registerAdmin());
     }
 
     private void registerAdmin() {
-        String firstName = adminFirstName.getText().toString().trim();
-        String lastName = adminLastName.getText().toString().trim();
-        String email = adminEmail.getText().toString().trim();
-        String section = adminSection.getText().toString().trim();
-        String password = adminPassword.getText().toString();
+        String firstName = edtFirstName.getText().toString().trim();
+        String lastName = edtLastName.getText().toString().trim();
+        String email = edtEmail.getText().toString().trim();
+        String section = edtSection.getText().toString().trim();
+        String password = edtPassword.getText().toString().trim();
 
-        if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || section.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(firstName) || TextUtils.isEmpty(lastName) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+            Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (password.length() < 6) {
-            Toast.makeText(this, "Password must be at least 6 characters.", Toast.LENGTH_SHORT).show();
-            return;
+        setInProgress(true);
+
+        mAuth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this, task -> {
+                if (task.isSuccessful()) {
+                    FirebaseUser firebaseUser = mAuth.getCurrentUser();
+                    if (firebaseUser != null) {
+                        firebaseUser.sendEmailVerification(); // Send verification email
+                        saveAdminDataToDatabase(firebaseUser, firstName, lastName, section);
+                    } else {
+                        showError("Failed to get user session after creation.");
+                    }
+                } else {
+                    showError("Registration Failed: " + task.getException().getMessage());
+                }
+            });
+    }
+
+    private void saveAdminDataToDatabase(FirebaseUser firebaseUser, String firstName, String lastName, String section) {
+        String uid = firebaseUser.getUid();
+
+        Map<String, Object> adminData = new HashMap<>();
+        adminData.put("firstName", firstName);
+        adminData.put("lastName", lastName);
+        adminData.put("email", firebaseUser.getEmail());
+        adminData.put("role", "admin");
+        adminData.put("uid", uid);
+        if (!section.isEmpty()) {
+            adminData.put("section", section);
         }
 
-        registerBtn.setEnabled(false);
-        progressBar.setVisibility(android.view.View.VISIBLE);
+        usersRef.child(uid).setValue(adminData).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(this, "Admin registered! Verification email sent.", Toast.LENGTH_LONG).show();
+                mAuth.signOut();
+                finish();
+            } else {
+                showError("Failed to save admin data: " + task.getException().getMessage());
+            }
+        });
+    }
 
-        auth.createUserWithEmailAndPassword(email, password)
-                .addOnSuccessListener(result -> {
-                    String uid = result.getUser().getUid();
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("firstName", firstName);
-                    data.put("lastName", lastName);
-                    data.put("email", email);
-                    data.put("role", "admin");
-                    data.put("section", section);
+    private void setInProgress(boolean inProgress) {
+        progressBar.setVisibility(inProgress ? View.VISIBLE : View.GONE);
+        btnRegister.setEnabled(!inProgress);
+    }
 
-                    usersRef.child(uid).setValue(data)
-                            .addOnSuccessListener(a -> {
-                                if (auth.getCurrentUser() != null) {
-                                    auth.getCurrentUser().sendEmailVerification()
-                                            .addOnCompleteListener(v -> {
-                                                progressBar.setVisibility(android.view.View.GONE);
-                                                registerBtn.setEnabled(true);
-                                                auth.signOut();
-                                                startActivity(new Intent(RegisterAdminActivity.this, AdminRegistrationCompleteActivity.class));
-                                                finish();
-                                            });
-                                }
-                            })
-                            .addOnFailureListener(e -> {
-                                progressBar.setVisibility(android.view.View.GONE);
-                                registerBtn.setEnabled(true);
-                                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            });
-                })
-                .addOnFailureListener(e -> {
-                    progressBar.setVisibility(android.view.View.GONE);
-                    registerBtn.setEnabled(true);
-                    Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+    private void showError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        setInProgress(false);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

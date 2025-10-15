@@ -1,110 +1,108 @@
 package com.example.finalproject;
 
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 public class AttendanceHistoryActivity extends AppCompatActivity {
 
-    private RecyclerView recyclerView;
-    private AttendanceAdapter adapter;
+    public static class HistoryItem {
+        private String date, title, timeIn, timeOut, status;
+
+        public HistoryItem(String date, String title, String timeIn, String timeOut, String status) {
+            this.date = date;
+            this.title = title;
+            this.timeIn = timeIn;
+            this.timeOut = timeOut;
+            this.status = status;
+        }
+
+        public String getDate() { return date; }
+        public String getTitle() { return title; }
+        public String getTimeIn() { return timeIn; }
+        public String getTimeOut() { return timeOut; }
+        public String getStatus() { return status; }
+    }
+
+    private RecyclerView historyRecyclerView;
+    private HistoryAdapter adapter;
+    private ArrayList<HistoryItem> historyList;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_attendance_history);
 
-        recyclerView = findViewById(R.id.rvAttendanceHistory);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        historyRecyclerView = findViewById(R.id.rvAttendanceHistory);
+        historyRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        
+        historyList = new ArrayList<>();
+        adapter = new HistoryAdapter(historyList);
+        historyRecyclerView.setAdapter(adapter);
+
+        mAuth = FirebaseAuth.getInstance();
 
         loadAttendanceHistory();
     }
 
     private void loadAttendanceHistory() {
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference attendanceRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/")
-            .getReference("attendance").child(uid);
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "You must be logged in to view history.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String studentUid = currentUser.getUid();
 
-        attendanceRef.orderByChild("dateStr").limitToLast(100).addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference attendanceRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("attendance_by_day");
+
+        attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<AttendanceItem> items = new ArrayList<>();
-                for (DataSnapshot child : snapshot.getChildren()) {
-                    String title = child.child("attendanceTitle").getValue(String.class);
-                    String status = child.child("status").getValue(String.class);
-                    String date = child.child("dateStr").getValue(String.class);
-                    items.add(new AttendanceItem(title, status, date));
+                historyList.clear();
+                if (!snapshot.exists()) {
+                    Toast.makeText(AttendanceHistoryActivity.this, "No attendance history found.", Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                // Reverse the list to show the most recent first
-                java.util.Collections.reverse(items);
-                adapter = new AttendanceAdapter(items);
-                recyclerView.setAdapter(adapter);
+
+                for (DataSnapshot daySnapshot : snapshot.getChildren()) {
+                    String date = daySnapshot.getKey();
+                    for (DataSnapshot titleSnapshot : daySnapshot.getChildren()) {
+                        String title = titleSnapshot.getKey();
+                        if (titleSnapshot.hasChild(studentUid)) {
+                            DataSnapshot record = titleSnapshot.child(studentUid);
+                            String timeIn = record.child("time_in").getValue(String.class);
+                            String timeOut = record.child("time_out").getValue(String.class);
+                            String status = record.child("status").getValue(String.class);
+                            historyList.add(new HistoryItem(date, title, timeIn, timeOut != null ? timeOut : "--:--", status));
+                        }
+                    }
+                }
+
+                Collections.reverse(historyList);
+                adapter.notifyDataSetChanged();
+
+                if (historyList.isEmpty()) {
+                    Toast.makeText(AttendanceHistoryActivity.this, "No attendance records found for you.", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) { }
-        });
-    }
-
-    // ViewHolder and Adapter for RecyclerView
-    private static class AttendanceItem {
-        String title, status, date;
-        AttendanceItem(String title, String status, String date) {
-            this.title = title;
-            this.status = status;
-            this.date = date;
-        }
-    }
-
-    private static class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.ViewHolder> {
-        private final List<AttendanceItem> attendanceList;
-
-        AttendanceAdapter(List<AttendanceItem> list) {
-            this.attendanceList = list;
-        }
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_2, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            AttendanceItem item = attendanceList.get(position);
-            holder.text1.setText(item.title != null ? item.title : "General Attendance");
-            holder.text2.setText((item.date != null ? item.date : "") + " - Status: " + (item.status != null ? item.status : "N/A"));
-        }
-
-        @Override
-        public int getItemCount() {
-            return attendanceList.size();
-        }
-
-        static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView text1, text2;
-            ViewHolder(View itemView) {
-                super(itemView);
-                text1 = itemView.findViewById(android.R.id.text1);
-                text2 = itemView.findViewById(android.R.id.text2);
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(AttendanceHistoryActivity.this, "Failed to load history.", Toast.LENGTH_SHORT).show();
             }
-        }
+        });
     }
 }

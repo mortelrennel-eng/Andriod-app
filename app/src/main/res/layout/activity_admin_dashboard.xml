@@ -22,12 +22,20 @@
             android:textColor="@color/textPrimary" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCreateAnnouncement"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="18dp"
+            android:text="Create Announcement" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnManageStudents"
             style="@style/Widget.App.Button"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="18dp"
-            android:text="Manage Students" />
+            android:text="👩‍🏫 Manage Students" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnScanQr"
@@ -35,7 +43,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
-            android:text="Scan QR (Attendance)" />
+            android:text="🔍 Scan QR (Attendance)" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnManageAttendance"
@@ -43,7 +51,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
-            android:text="Manage Attendance" />
+            android:text="📈 Manage Attendance" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnViewUsers"

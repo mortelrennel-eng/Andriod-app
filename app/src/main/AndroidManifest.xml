@@ -39,12 +39,23 @@
         <activity android:name=".AdminRegistrationCompleteActivity" />
         <activity android:name=".UsersListActivity" />
         <activity android:name=".ManageStudentsActivity" />
-    <activity android:name=".ManageSectionsActivity" />
-        <activity android:name=".AdminUploadActivity" />
+        <activity android:name=".ManageSectionsActivity" />
+        <activity android:name=".AddEbookActivity" />
         <activity android:name=".EbookManagerActivity" />
         <activity android:name=".ViewAdminsActivity" />
         <activity android:name=".QRGeneratorActivity" />
         <activity android:name=".ManageAttendanceActivity" />
+        <activity android:name=".CreateAnnouncementActivity" />
+        <activity android:name=".ManageAdminsActivity" />
+        <activity android:name=".SectionAttendanceActivity" />
+        <activity android:name=".AddStudentsToSectionActivity" />
+        <activity android:name=".ViewStudentsInSectionActivity" />
+        <activity android:name=".ViewAttendanceActivity" />
+        <activity android:name=".StudentListBySectionActivity" />
+        <activity android:name=".AttendanceListBySectionActivity" />
+        <activity android:name=".EditStudentActivity" />
+        <activity android:name=".StudentListForAttendanceActivity" /> <!-- NEW -->
+        <activity android:name=".AttendanceHistoryForStudentActivity" /> <!-- NEW -->
 
         <!-- ✅ Student Features -->
         <activity android:name=".StudentDashboard" />
@@ -52,6 +63,8 @@
         <activity android:name=".AttendanceHistoryActivity" />
         <activity android:name=".EbookListActivity" />
         <activity android:name=".SavedEbooksActivity" />
+        <activity android:name=".EditStudentProfileActivity" />
+        <activity android:name=".ViewAnnouncementsActivity" />
 
         <!-- ✅ Login Pages -->
         <activity android:name=".AdminLoginActivity" />
@@ -59,9 +72,19 @@
         <activity android:name=".StudentLoginActivity" />
 
         <!-- ✅ Utility Activities -->
-        <activity android:name=".QRScannerActivity" 
-                  android:screenOrientation="portrait"
-                  tools:replace="screenOrientation"/>
+        <activity 
+            android:name=".QRScannerActivity" 
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation"/>
+
+        <!-- ✅ Firebase Messaging Service -->
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
     </application>
 </manifest>

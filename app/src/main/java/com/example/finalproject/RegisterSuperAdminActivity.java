@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -20,7 +21,6 @@ public class RegisterSuperAdminActivity extends AppCompatActivity {
     EditText superAdminFirstName, superAdminLastName, superAdminEmail, superAdminSection, superAdminPassword;
     Button registerSuperAdminBtn;
     FirebaseAuth auth;
-    FirebaseDatabase realtimeDb;
     DatabaseReference usersRef;
     android.widget.ProgressBar progressBar;
 
@@ -38,8 +38,7 @@ public class RegisterSuperAdminActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBarSuperAdminRegister);
 
         auth = FirebaseAuth.getInstance();
-        realtimeDb = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/");
-        usersRef = realtimeDb.getReference("users");
+        usersRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("users");
 
         registerSuperAdminBtn.setOnClickListener(v -> registerSuperAdmin());
     }
@@ -61,36 +60,44 @@ public class RegisterSuperAdminActivity extends AppCompatActivity {
             return;
         }
 
-        registerSuperAdminBtn.setEnabled(false);
         progressBar.setVisibility(android.view.View.VISIBLE);
+        registerSuperAdminBtn.setEnabled(false);
 
         auth.createUserWithEmailAndPassword(email, password)
-                .addOnSuccessListener(result -> {
-                    String uid = result.getUser().getUid();
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("firstName", firstName);
-                    data.put("lastName", lastName);
-                    data.put("email", email);
-                    data.put("role", "superadmin"); // Set role to superadmin
-                    data.put("section", section);
-
-                    usersRef.child(uid).setValue(data)
-                            .addOnSuccessListener(a -> {
-                                progressBar.setVisibility(android.view.View.GONE);
-                                registerSuperAdminBtn.setEnabled(true);
-                                Toast.makeText(this, "Super Admin registered successfully!", Toast.LENGTH_LONG).show();
-                                finish(); // Go back to the dashboard
-                            })
-                            .addOnFailureListener(e -> {
-                                progressBar.setVisibility(android.view.View.GONE);
-                                registerSuperAdminBtn.setEnabled(true);
-                                Toast.makeText(this, "Database Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    FirebaseUser firebaseUser = auth.getCurrentUser();
+                    if (firebaseUser != null) {
+                        firebaseUser.sendEmailVerification()
+                            .addOnCompleteListener(verificationTask -> {
+                                if (verificationTask.isSuccessful()) {
+                                    Toast.makeText(RegisterSuperAdminActivity.this, "Verification email sent to " + email, Toast.LENGTH_LONG).show();
+                                }
                             });
-                })
-                .addOnFailureListener(e -> {
+
+                        String uid = firebaseUser.getUid();
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("firstName", firstName);
+                        data.put("lastName", lastName);
+                        data.put("email", email);
+                        data.put("role", "superadmin");
+                        data.put("section", section);
+
+                        usersRef.child(uid).setValue(data)
+                            .addOnCompleteListener(dbTask -> {
+                                progressBar.setVisibility(android.view.View.GONE);
+                                registerSuperAdminBtn.setEnabled(true);
+                                auth.signOut();
+                                
+                                Toast.makeText(RegisterSuperAdminActivity.this, "Super Admin registered. Please verify email.", Toast.LENGTH_LONG).show();
+                                finish();
+                            });
+                    }
+                } else {
                     progressBar.setVisibility(android.view.View.GONE);
                     registerSuperAdminBtn.setEnabled(true);
-                    Toast.makeText(this, "Registration Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                    Toast.makeText(RegisterSuperAdminActivity.this, "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
     }
 }

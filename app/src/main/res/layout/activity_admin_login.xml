@@ -24,7 +24,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Admin / Student Login"
+            android:text="Admin Login"
             android:textSize="20sp"
             android:textColor="@color/textPrimary"
             android:layout_marginTop="12dp"
@@ -73,21 +73,7 @@
             android:layout_marginTop="14dp"
             android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/txtGoToRegister"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Don't have an account? Register"
-            android:textColor="@color/textSecondary"
-            android:layout_marginTop="20dp" />
+        <!-- The registration text has been removed -->
 
-        <TextView
-            android:id="@+id/txtResendVerification"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Resend verification email"
-            android:textColor="@color/primary"
-            android:layout_marginTop="12dp"
-            android:visibility="gone" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

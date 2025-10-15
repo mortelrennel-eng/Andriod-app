@@ -3,173 +3,135 @@ package com.example.finalproject;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.ProgressBar;
+import android.view.MenuItem;
 import android.widget.Toast;
-
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class EbookManagerActivity extends AppCompatActivity {
 
-    private Button uploadBtn;
-    private ListView ebookListView;
-    private ProgressBar progressBar;
-    private EditText titleEditText;
-    private EditText categoryEditText;
-
-    private FirebaseStorage storage;
-    private FirebaseDatabase realtimeDb;
-    private DatabaseReference ebooksRef;
-
+    private RecyclerView ebooksRecyclerView;
+    private EbookAdapter ebookAdapter;
     private ArrayList<Ebook> ebookList;
-    private ArrayAdapter<Ebook> ebookAdapter;
-
-    private static final int FILE_SELECT_CODE = 100;
+    private ArrayList<Ebook> filteredList;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ebook_manager);
 
-    // Initialize Firebase
-    storage = FirebaseStorage.getInstance();
-    realtimeDb = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/");
-    ebooksRef = realtimeDb.getReference("ebooks");
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Manage E-Books");
 
-        // Initialize views
-        uploadBtn = findViewById(R.id.uploadBtn);
-        ebookListView = findViewById(R.id.ebookListView);
-        titleEditText = findViewById(R.id.titleEditText);
-        categoryEditText = findViewById(R.id.categoryEditText);
-        // We will add a progress bar for better UX, assuming you add it to your XML
-        // progressBar = findViewById(R.id.progressBar);
+        ebooksRecyclerView = findViewById(R.id.ebooksRecyclerView);
+        ebooksRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Setup list and adapter
         ebookList = new ArrayList<>();
-        ebookAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, ebookList);
-        ebookListView.setAdapter(ebookAdapter);
+        filteredList = new ArrayList<>();
+        ebookAdapter = new EbookAdapter(filteredList, this);
+        ebooksRecyclerView.setAdapter(ebookAdapter);
 
-        // Set listeners
-        uploadBtn.setOnClickListener(v -> selectFile());
-        ebookListView.setOnItemClickListener((parent, view, position, id) -> {
-            Ebook selectedEbook = ebookList.get(position);
-            // Open the ebook URL in a browser
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(selectedEbook.getFileUrl()));
-            startActivity(browserIntent);
-        });
+        searchView = findViewById(R.id.searchView);
+        setupSearchView();
 
-        // Load existing ebooks
         loadEbooks();
     }
 
-    private void selectFile() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("application/pdf");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        try {
-            startActivityForResult(Intent.createChooser(intent, "Select a PDF to Upload"), FILE_SELECT_CODE);
-        } catch (android.content.ActivityNotFoundException ex) {
-            Toast.makeText(this, "Please install a File Manager.", Toast.LENGTH_SHORT).show();
-        }
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) { return false; }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filter(newText);
+                return true;
+            }
+        });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == FILE_SELECT_CODE && resultCode == RESULT_OK && data != null) {
-            Uri fileUri = data.getData();
-            uploadFile(fileUri);
-        }
-    }
-
-    private void uploadFile(Uri fileUri) {
-        if (fileUri == null) return;
-
-        Toast.makeText(this, "Upload starting...", Toast.LENGTH_SHORT).show();
-        String fileName = "ebook_" + System.currentTimeMillis() + ".pdf";
-        StorageReference ref = storage.getReference().child("ebooks/" + fileName);
-
-        ref.putFile(fileUri)
-            .addOnSuccessListener(taskSnapshot -> ref.getDownloadUrl().addOnSuccessListener(uri -> {
-                String title = titleEditText.getText().toString().trim();
-                String category = categoryEditText.getText().toString().trim();
-                if (title.isEmpty()) {
-                    title = fileName; // fallback to filename
+    private void filter(String text) {
+        filteredList.clear();
+        if (text.isEmpty()) {
+            filteredList.addAll(ebookList);
+        } else {
+            text = text.toLowerCase();
+            for (Ebook ebook : ebookList) {
+                if (ebook.getTitle().toLowerCase().contains(text) || (ebook.getCategory() != null && ebook.getCategory().toLowerCase().contains(text))) {
+                    filteredList.add(ebook);
                 }
-                Map<String, Object> ebookData = new HashMap<>();
-                ebookData.put("title", title);
-                ebookData.put("category", category);
-                ebookData.put("fileUrl", uri.toString());
-
-                // save metadata to Realtime Database under /ebooks (push id)
-                ebooksRef.push().setValue(ebookData)
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(EbookManagerActivity.this, "Ebook uploaded successfully!", Toast.LENGTH_SHORT).show();
-                            titleEditText.setText("");
-                            categoryEditText.setText("");
-                            loadEbooks();
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(EbookManagerActivity.this, "Failed to save ebook metadata.", Toast.LENGTH_SHORT).show());
-            }))
-            .addOnFailureListener(e -> Toast.makeText(this, "Upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        }
+        ebookAdapter.notifyDataSetChanged();
     }
 
     private void loadEbooks() {
-        ebooksRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference ebooksRef = FirebaseDatabase.getInstance().getReference("ebooks");
+        ebooksRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot snapshot) {
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
                 ebookList.clear();
-                for (DataSnapshot child : snapshot.getChildren()) {
-                    String title = child.child("title").getValue(String.class);
-                    String fileUrl = child.child("fileUrl").getValue(String.class);
-                    Ebook ebook = new Ebook(title, fileUrl);
-                    ebookList.add(ebook);
+                for (DataSnapshot ebookSnapshot : snapshot.getChildren()) {
+                    Ebook ebook = ebookSnapshot.getValue(Ebook.class);
+                    if (ebook != null) {
+                        ebook.setKey(ebookSnapshot.getKey());
+                        ebookList.add(ebook);
+                    }
                 }
-                ebookAdapter.notifyDataSetChanged();
+                filter(searchView.getQuery().toString()); // Apply current filter
             }
 
             @Override
-            public void onCancelled(DatabaseError error) {
+            public void onCancelled(@NonNull DatabaseError error) {
                 Toast.makeText(EbookManagerActivity.this, "Failed to load ebooks.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Helper class to hold ebook data
-    private static class Ebook {
-        private String title;
-        private String fileUrl;
+    public void viewEbook(Ebook ebook) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(ebook.getFileUrl()));
+        startActivity(intent);
+    }
 
-        public Ebook(String title, String fileUrl) {
-            this.title = title;
-            this.fileUrl = fileUrl;
-        }
+    public void editEbook(Ebook ebook) {
+        // To-do: Create a new EditEbookActivity
+        Toast.makeText(this, "Editing: " + ebook.getTitle(), Toast.LENGTH_SHORT).show();
+    }
 
-        public String getFileUrl() {
-            return fileUrl;
-        }
+    public void deleteEbook(Ebook ebook) {
+        new AlertDialog.Builder(this)
+            .setTitle("Delete E-book")
+            .setMessage("Are you sure you want to delete '" + ebook.getTitle() + "'?")
+            .setPositiveButton("Delete", (dialog, which) -> {
+                DatabaseReference ebookRef = FirebaseDatabase.getInstance().getReference("ebooks").child(ebook.getKey());
+                ebookRef.removeValue();
+                Toast.makeText(this, "E-book deleted.", Toast.LENGTH_SHORT).show();
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
 
-        // This is what is displayed in the ListView
-        @Override
-        public String toString() {
-            return title;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 }

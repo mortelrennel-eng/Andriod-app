@@ -43,36 +43,50 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Download QR" />
+            android:text="⬇️ Download QR" />
 
         <!-- Action Buttons -->
+        <Button
+            android:id="@+id/btnEditProfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="✏️ Edit Profile" />
+
+        <Button
+            android:id="@+id/btnViewAnnouncements"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="📢 View Announcements" />
+
         <Button
             android:id="@+id/btnViewAttendance"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="View Attendance History" />
+            android:text="📅 View Attendance History" />
 
         <Button
             android:id="@+id/btnOpenEbooks"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="View E-Books" />
+            android:text="📚 View E-Books" />
 
         <Button
             android:id="@+id/btnSavedEbooks"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="My Saved E-books" />
+            android:text="💾 My Saved E-books" />
 
         <Button
             android:id="@+id/btnStudentSignOut"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Sign Out" />
+            android:text="🔒 Sign Out" />
 
     </LinearLayout>
 </ScrollView>

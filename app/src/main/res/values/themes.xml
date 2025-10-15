@@ -15,4 +15,9 @@
         <item name="android:paddingLeft">18dp</item>
         <item name="android:paddingRight">18dp</item>
     </style>
+
+    <style name="CardRow">
+        <item name="android:background">@drawable/item_card_bg</item>
+        <item name="android:padding">8dp</item>
+    </style>
 </resources>

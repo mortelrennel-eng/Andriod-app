@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 public class QRGeneratorActivity extends AppCompatActivity {
 
@@ -47,21 +48,10 @@ public class QRGeneratorActivity extends AppCompatActivity {
     }
 
     private void generateQRCode(String data) {
-        QRCodeWriter writer = new QRCodeWriter();
         try {
-            int size = 512;
-            com.google.zxing.common.BitMatrix bitMatrix =
-                    writer.encode(data, BarcodeFormat.QR_CODE, size, size);
-
-            Bitmap bmp = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565);
-
-            for (int x = 0; x < size; x++) {
-                for (int y = 0; y < size; y++) {
-                    bmp.setPixel(x, y, bitMatrix.get(x, y) ? 0xFF000000 : 0xFFFFFFFF);
-                }
-            }
-
-            qrImage.setImageBitmap(bmp);
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            Bitmap bitmap = barcodeEncoder.encodeBitmap(data, BarcodeFormat.QR_CODE, 512, 512);
+            qrImage.setImageBitmap(bitmap);
         } catch (WriterException e) {
             e.printStackTrace();
             Toast.makeText(this, "Failed to generate QR Code", Toast.LENGTH_SHORT).show();

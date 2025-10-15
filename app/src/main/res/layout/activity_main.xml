@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
-            android:text="Superadmin" />
+            android:text="🌟 Superadmin" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAdmin"
@@ -36,7 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
-            android:text="Admin" />
+            android:text="👩‍💼 Admin" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStudent"
@@ -44,7 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
-            android:text="Student" />
+            android:text="🎓 Student" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

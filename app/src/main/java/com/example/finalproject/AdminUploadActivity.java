@@ -1,141 +1,136 @@
 package com.example.finalproject;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import androidx.appcompat.widget.Toolbar;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class AdminUploadActivity extends AppCompatActivity {
-    private static final String TAG = "AdminUpload";
-    private static final int PICK_PDF = 9001;
-    private EditText etTitle;
-    private Button btnPick, btnUpload;
-    private ProgressBar progress;
-    private Uri pickedUri;
+
+    private static final int FILE_SELECT_CODE = 100;
+    private EditText edtEbookTitle, edtEbookCategory;
+    private Button btnSelectFile, btnUpload;
+    private ProgressBar progressBar;
+    private Uri selectedFileUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_upload);
 
-        // guard: ensure user is admin/superadmin
-        if (!checkAdmin()) return;
+        // Toolbar with back button
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Upload E-Book");
 
-        etTitle = findViewById(R.id.etEbookTitle);
-        btnPick = findViewById(R.id.btnPickPdf);
-        btnUpload = findViewById(R.id.btnUploadPdf);
-        progress = findViewById(R.id.progressUpload);
+        edtEbookTitle = findViewById(R.id.edtEbookTitle);
+        edtEbookCategory = findViewById(R.id.edtEbookCategory);
+        btnSelectFile = findViewById(R.id.btnSelectFile);
+        btnUpload = findViewById(R.id.btnUpload);
+        progressBar = findViewById(R.id.progressBar);
 
-        btnPick.setOnClickListener(v -> {
-            Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-            i.setType("application/pdf");
-            startActivityForResult(Intent.createChooser(i, "Select PDF"), PICK_PDF);
-        });
-
-        btnUpload.setOnClickListener(v -> upload());
+        btnSelectFile.setOnClickListener(v -> selectFile());
+        btnUpload.setOnClickListener(v -> uploadEbook());
     }
 
-    private boolean checkAdmin() {
-        if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() == null) {
-            Toast.makeText(this, "Not signed in", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, AdminLoginActivity.class));
-            finish();
-            return false;
+    private void selectFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/pdf");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        try {
+            startActivityForResult(Intent.createChooser(intent, "Select a PDF"), FILE_SELECT_CODE);
+        } catch (Exception e) {
+            Toast.makeText(this, "Please install a File Manager.", Toast.LENGTH_SHORT).show();
         }
-        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference usersRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("users");
-        usersRef.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String role = snapshot.child("role").getValue(String.class);
-                if (role == null || !(role.equals("admin") || role.equals("superadmin"))) {
-                    Toast.makeText(AdminUploadActivity.this, "Access denied", Toast.LENGTH_LONG).show();
-                    startActivity(new Intent(AdminUploadActivity.this, AdminLoginActivity.class));
-                    finish();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(AdminUploadActivity.this, "Database error", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        });
-        return true;
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_PDF && resultCode == Activity.RESULT_OK && data != null) {
-            pickedUri = data.getData();
-            Toast.makeText(this, "Picked: " + pickedUri.getLastPathSegment(), Toast.LENGTH_SHORT).show();
+        if (requestCode == FILE_SELECT_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            selectedFileUri = data.getData();
+            Toast.makeText(this, "File selected: " + selectedFileUri.getLastPathSegment(), Toast.LENGTH_SHORT).show();
+            btnUpload.setEnabled(true); // Enable upload button only when a file is selected
         }
     }
 
-    private void upload() {
-        String title = etTitle.getText().toString().trim();
-        if (title.isEmpty() || pickedUri == null) {
-            Toast.makeText(this, "Title and PDF required", Toast.LENGTH_SHORT).show();
+    private void uploadEbook() {
+        String title = edtEbookTitle.getText().toString().trim();
+        String category = edtEbookCategory.getText().toString().trim();
+
+        if (selectedFileUri == null) {
+            Toast.makeText(this, "Please select a file first.", Toast.LENGTH_SHORT).show();
             return;
         }
-        progress.setVisibility(View.VISIBLE);
+        if (title.isEmpty()) {
+            Toast.makeText(this, "Please enter a title.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("ebooks/")
-                .child(System.currentTimeMillis() + ".pdf");
-    // disable upload button while uploading
-    btnUpload.setEnabled(false);
-    storageRef.putFile(pickedUri)
-        .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                    // write to RTDB
-                    DatabaseReference ebooksRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("ebooks");
-                    String key = ebooksRef.push().getKey();
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("title", title);
-                    map.put("url", uri.toString());
-                    ebooksRef.child(key).setValue(map)
-                            .addOnSuccessListener(aVoid -> {
-                                progress.setVisibility(View.GONE);
-                                btnUpload.setEnabled(true);
-                                new androidx.appcompat.app.AlertDialog.Builder(AdminUploadActivity.this)
-                                        .setTitle("Upload successful")
-                                        .setMessage("E-book uploaded and saved to database.")
-                                        .setPositiveButton("OK", null)
-                                        .show();
-                            })
-                            .addOnFailureListener(e -> {
-                                progress.setVisibility(View.GONE);
-                                btnUpload.setEnabled(true);
-                                Toast.makeText(AdminUploadActivity.this, "Failed writing metadata", Toast.LENGTH_SHORT).show();
-                            });
-                }))
-                .addOnFailureListener(e -> {
-                    progress.setVisibility(View.GONE);
-                    btnUpload.setEnabled(true);
-                    Toast.makeText(AdminUploadActivity.this, "Upload failed", Toast.LENGTH_SHORT).show();
-                });
+        setInProgress(true);
+
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("ebooks/" + System.currentTimeMillis() + "_" + selectedFileUri.getLastPathSegment());
+        
+        storageRef.putFile(selectedFileUri).addOnSuccessListener(taskSnapshot -> {
+            storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                String fileUrl = uri.toString();
+                saveEbookMetadata(title, category, fileUrl);
+            }).addOnFailureListener(e -> showError("Failed to get download URL."));
+        }).addOnFailureListener(e -> showError("Upload Failed. Please check Firebase Storage Rules."));
+    }
+
+    private void saveEbookMetadata(String title, String category, String fileUrl) {
+        DatabaseReference dbRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("ebooks");
+        String ebookId = dbRef.push().getKey();
+
+        if (ebookId != null) {
+            Map<String, Object> ebookData = new HashMap<>();
+            ebookData.put("title", title);
+            ebookData.put("category", category);
+            ebookData.put("fileUrl", fileUrl);
+
+            dbRef.child(ebookId).setValue(ebookData).addOnSuccessListener(aVoid -> {
+                Toast.makeText(AdminUploadActivity.this, "E-book uploaded successfully!", Toast.LENGTH_LONG).show();
+                setInProgress(false);
+                finish(); // Go back to the dashboard
+            }).addOnFailureListener(e -> showError("Failed to save e-book details."));
+        } else {
+            showError("Failed to generate e-book ID.");
+        }
+    }
+
+    private void setInProgress(boolean inProgress) {
+        progressBar.setVisibility(inProgress ? View.VISIBLE : View.GONE);
+        btnUpload.setEnabled(!inProgress);
+        btnSelectFile.setEnabled(!inProgress);
+    }
+
+    private void showError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        setInProgress(false);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

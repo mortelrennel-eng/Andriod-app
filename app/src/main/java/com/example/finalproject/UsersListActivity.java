@@ -1,155 +1,130 @@
 package com.example.finalproject;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.content.Intent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
+import android.view.MenuItem;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UsersListActivity extends AppCompatActivity {
-    private static final String TAG = "UsersListActivity";
-    private RecyclerView recyclerView;
-    private UsersAdapter adapter;
-    private DatabaseReference usersRef;
+
+    private RecyclerView usersRecyclerView;
+    private UserSectionAdapter adapter;
+    private List<Object> displayList; // Can hold SectionHeader or User objects
+    private List<Object> originalList; // To hold the unfiltered list
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users_list);
 
-        // guard: only admin/superadmin allowed
-        if (!ensureAdmin()) return;
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("All Users by Section");
 
-        recyclerView = findViewById(R.id.rvUsers);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new UsersAdapter(new ArrayList<>());
-        recyclerView.setAdapter(adapter);
+        usersRecyclerView = findViewById(R.id.usersRecyclerView);
+        usersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        
+        displayList = new ArrayList<>();
+        originalList = new ArrayList<>();
+        adapter = new UserSectionAdapter(displayList);
+        usersRecyclerView.setAdapter(adapter);
 
-        FirebaseDatabase db = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/");
-        usersRef = db.getReference("users");
+        searchView = findViewById(R.id.searchView);
+        setupSearchView();
 
-        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        loadUsersBySection();
+    }
+
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<UserItem> items = new ArrayList<>();
-                for (DataSnapshot child : snapshot.getChildren()) {
-                    String uid = child.getKey();
-                    String email = child.child("email").getValue(String.class);
-                    String role = child.child("role").getValue(String.class);
-                    String name;
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
 
-                    // Handle both new format (firstName, lastName) and old format (name)
-                    if (child.hasChild("firstName") && child.hasChild("lastName")) {
-                        String first = child.child("firstName").getValue(String.class);
-                        String last = child.child("lastName").getValue(String.class);
-                        name = ((first != null ? first : "") + " " + (last != null ? last : "")).trim();
-                    } else {
-                        name = child.child("name").getValue(String.class);
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filter(newText);
+                return true;
+            }
+        });
+    }
+
+    private void filter(String text) {
+        displayList.clear();
+        if (text.isEmpty()) {
+            displayList.addAll(originalList);
+        } else {
+            text = text.toLowerCase();
+            for (Object item : originalList) {
+                if (item instanceof SectionHeader) {
+                    // You can decide if you want to add section headers even when filtering
+                } else if (item instanceof User) {
+                    User user = (User) item;
+                    String fullName = (user.getFirstName() + " " + user.getLastName()).toLowerCase();
+                    if (fullName.contains(text) || (user.getSection() != null && user.getSection().toLowerCase().contains(text))) {
+                        displayList.add(user);
                     }
-
-                    items.add(new UserItem(uid, name, email, role));
                 }
-                adapter.update(items);
+            }
+        }
+        adapter.notifyDataSetChanged();
+    }
+
+    private void loadUsersBySection() {
+        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+        usersRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                originalList.clear();
+                Map<String, List<User>> sectionsMap = new HashMap<>();
+
+                for (DataSnapshot userSnapshot : snapshot.getChildren()) {
+                    User user = userSnapshot.getValue(User.class);
+                    if (user != null) {
+                        String section = user.getSection() != null ? user.getSection() : "Unassigned";
+                        if (!sectionsMap.containsKey(section)) {
+                            sectionsMap.put(section, new ArrayList<>());
+                        }
+                        sectionsMap.get(section).add(user);
+                    }
+                }
+
+                for (Map.Entry<String, List<User>> entry : sectionsMap.entrySet()) {
+                    originalList.add(new SectionHeader(entry.getKey()));
+                    originalList.addAll(entry.getValue());
+                }
+                
+                filter(searchView.getQuery().toString());
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.w(TAG, "loadUsers:onCancelled", error.toException());
+            public void onCancelled(DatabaseError error) {
+                // Handle error
             }
         });
     }
 
-    private boolean ensureAdmin() {
-        if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() == null) {
-            Toast.makeText(this, "Not signed in", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, AdminLoginActivity.class));
-            finish();
-            return false;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
         }
-        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference ref = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("users");
-        ref.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String role = snapshot.child("role").getValue(String.class);
-                if (role == null || !(role.equals("admin") || role.equals("superadmin"))) {
-                    Toast.makeText(UsersListActivity.this, "Access denied", Toast.LENGTH_LONG).show();
-                    startActivity(new Intent(UsersListActivity.this, AdminLoginActivity.class));
-                    finish();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(UsersListActivity.this, "Database error", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        });
-        return true;
-    }
-
-    static class UserItem {
-        String uid, name, email, role;
-
-        UserItem(String uid, String name, String email, String role) {
-            this.uid = uid;
-            this.name = name;
-            this.email = email;
-            this.role = role;
-        }
-    }
-
-    static class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.VH> {
-        private List<UserItem> items;
-
-        UsersAdapter(List<UserItem> items) { this.items = items; }
-
-        void update(List<UserItem> newItems) {
-            this.items = newItems;
-            notifyDataSetChanged();
-        }
-
-        @NonNull
-        @Override
-        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_2, parent, false);
-            return new VH(v);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull VH holder, int position) {
-            UserItem it = items.get(position);
-            holder.title.setText(it.name != null && !it.name.isEmpty() ? it.name : (it.email != null ? it.email : it.uid));
-            holder.subtitle.setText((it.role != null ? it.role : "") + (it.email != null ? " — " + it.email : ""));
-        }
-
-        @Override
-        public int getItemCount() { return items.size(); }
-
-        static class VH extends RecyclerView.ViewHolder {
-            TextView title, subtitle;
-            VH(@NonNull View itemView) {
-                super(itemView);
-                title = itemView.findViewById(android.R.id.text1);
-                subtitle = itemView.findViewById(android.R.id.text2);
-            }
-        }
+        return super.onOptionsItemSelected(item);
     }
 }

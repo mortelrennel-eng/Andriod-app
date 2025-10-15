@@ -1,42 +1,39 @@
 package com.example.finalproject;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.journeyapps.barcodescanner.BarcodeEncoder;
+import com.google.firebase.database.FirebaseDatabase;
 
-import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 public class StudentRegisterActivity extends AppCompatActivity {
 
-    EditText edtFirstName, edtLastName, edtStudentId, edtEmail, edtContactNumber, edtPassword, edtParentName, edtParentContactNumber;
-    Button btnRegister;
-    FirebaseAuth mAuth;
-    FirebaseDatabase realtimeDb;
-    DatabaseReference usersRef;
-    FirebaseStorage storage;
+    private EditText edtFirstName, edtLastName, edtStudentId, edtEmail, edtContactNumber, edtPassword, edtParentName, edtParentContactNumber;
+    private Button btnRegister;
+    private ProgressBar progressBar;
+
+    private FirebaseAuth mAuth;
+    private DatabaseReference usersRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student_register);
 
+        // Initialize Views
         edtFirstName = findViewById(R.id.edtFirstName);
         edtLastName = findViewById(R.id.edtLastName);
         edtStudentId = findViewById(R.id.edtStudentId);
@@ -46,16 +43,17 @@ public class StudentRegisterActivity extends AppCompatActivity {
         edtParentName = findViewById(R.id.edtParentName);
         edtParentContactNumber = findViewById(R.id.edtParentContactNumber);
         btnRegister = findViewById(R.id.btnRegister);
+        progressBar = findViewById(R.id.progressBar);
 
-    mAuth = FirebaseAuth.getInstance();
-    realtimeDb = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/");
-    usersRef = realtimeDb.getReference("users");
-        storage = FirebaseStorage.getInstance();
+        // Initialize Firebase
+        mAuth = FirebaseAuth.getInstance();
+        usersRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("users");
 
         btnRegister.setOnClickListener(v -> registerStudent());
     }
 
     private void registerStudent() {
+        // --- 1. Get and Validate Input ---
         String firstName = edtFirstName.getText().toString().trim();
         String lastName = edtLastName.getText().toString().trim();
         String studentId = edtStudentId.getText().toString().trim();
@@ -63,53 +61,34 @@ public class StudentRegisterActivity extends AppCompatActivity {
         String contactNumber = edtContactNumber.getText().toString().trim();
         String password = edtPassword.getText().toString().trim();
         String parentName = edtParentName.getText().toString().trim();
-        String parentContactNumber = edtParentContactNumber.getText().toString().trim();
+        String parentContact = edtParentContactNumber.getText().toString().trim();
 
-        if (firstName.isEmpty() || lastName.isEmpty() || studentId.isEmpty() || email.isEmpty() || contactNumber.isEmpty() || password.isEmpty() || parentName.isEmpty() || parentContactNumber.isEmpty()) {
-            Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
+        if (firstName.isEmpty() || lastName.isEmpty() || studentId.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            showError("Please fill all required fields");
             return;
         }
 
-        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
+        setInProgress(true);
+
+        // --- 2. Create User in Firebase Auth ---
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, task -> {
             if (task.isSuccessful()) {
-                FirebaseUser user = mAuth.getCurrentUser();
-                if (user != null) {
-                    String uid = user.getUid();
-                    // generate QR then save to RTDB
-                    generateAndUploadQrCode(uid, firstName, lastName, studentId, email, contactNumber, parentName, parentContactNumber);
+                FirebaseUser firebaseUser = mAuth.getCurrentUser();
+                if (firebaseUser == null) {
+                    showError("Registration succeeded but failed to get user session.");
+                    return;
                 }
+                // --- 3. Save user data to Realtime Database ---
+                saveUserToDatabase(firebaseUser, firstName, lastName, studentId, email, contactNumber, parentName, parentContact);
             } else {
-                Toast.makeText(this, "Registration Failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                showError("Registration Failed: " + (task.getException() != null ? task.getException().getMessage() : "An unknown error occurred"));
             }
         });
     }
 
-    private void generateAndUploadQrCode(String uid, String firstName, String lastName, String studentId, String email, String contactNumber, String parentName, String parentContactNumber) {
-        MultiFormatWriter writer = new MultiFormatWriter();
-        try {
-            BitMatrix bitMatrix = writer.encode(uid, BarcodeFormat.QR_CODE, 400, 400);
-            BarcodeEncoder encoder = new BarcodeEncoder();
-            Bitmap bitmap = encoder.createBitmap(bitMatrix);
+    private void saveUserToDatabase(FirebaseUser firebaseUser, String firstName, String lastName, String studentId, String email, String contactNumber, String parentName, String parentContact) {
+        String uid = firebaseUser.getUid();
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            byte[] data = baos.toByteArray();
-
-            StorageReference qrCodeRef = storage.getReference().child("qr_codes/" + uid + ".jpg");
-
-            qrCodeRef.putBytes(data)
-                    .addOnSuccessListener(taskSnapshot -> qrCodeRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                        String qrCodeUrl = uri.toString();
-                        saveUserToFirestore(uid, firstName, lastName, studentId, email, contactNumber, parentName, parentContactNumber, qrCodeUrl);
-                    }))
-                    .addOnFailureListener(e -> Toast.makeText(StudentRegisterActivity.this, "QR Code Upload Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-
-        } catch (WriterException e) {
-            Toast.makeText(this, "QR Code Generation Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void saveUserToFirestore(String uid, String firstName, String lastName, String studentId, String email, String contactNumber, String parentName, String parentContactNumber, String qrCodeUrl) {
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("firstName", firstName);
         userMap.put("lastName", lastName);
@@ -117,32 +96,39 @@ public class StudentRegisterActivity extends AppCompatActivity {
         userMap.put("email", email);
         userMap.put("contactNumber", contactNumber);
         userMap.put("parentName", parentName);
-        userMap.put("parentContactNumber", parentContactNumber);
+        userMap.put("parentContactNumber", parentContact);
         userMap.put("role", "student");
         userMap.put("uid", uid);
-        userMap.put("qrCodeUrl", qrCodeUrl);
-        usersRef.child(uid).setValue(userMap)
-                .addOnSuccessListener(aVoid -> {
-                    // send verification email
-                    FirebaseUser u = mAuth.getCurrentUser();
-                    if (u != null) {
-                        u.sendEmailVerification().addOnCompleteListener(v -> {
-                            Toast.makeText(this, "Registration successful! Verify your email before logging in.", Toast.LENGTH_LONG).show();
-                            mAuth.signOut();
-                            startActivity(new Intent(StudentRegisterActivity.this, StudentLoginActivity.class));
-                            finish();
-                        }).addOnFailureListener(e -> {
-                            Toast.makeText(this, "Failed to send verification: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                            mAuth.signOut();
-                            startActivity(new Intent(StudentRegisterActivity.this, StudentLoginActivity.class));
-                            finish();
-                        });
-                    } else {
-                        Toast.makeText(this, "Registration finished; please login.", Toast.LENGTH_LONG).show();
-                        startActivity(new Intent(StudentRegisterActivity.this, StudentLoginActivity.class));
-                        finish();
-                    }
-                })
-                .addOnFailureListener(e -> Toast.makeText(this, "Database Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+
+        usersRef.child(uid).setValue(userMap).addOnCompleteListener(dbTask -> {
+            if (dbTask.isSuccessful()) {
+                // --- 4. Send Verification Email ---
+                firebaseUser.sendEmailVerification().addOnCompleteListener(emailTask -> {
+                    Toast.makeText(this, "Registration successful! Please check your email to verify.", Toast.LENGTH_LONG).show();
+                    // --- 5. Sign Out and Redirect to Login ---
+                    mAuth.signOut();
+                    Intent intent = new Intent(StudentRegisterActivity.this, StudentLoginActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                });
+            } else {
+                showError("Failed to save user data: " + (dbTask.getException() != null ? dbTask.getException().getMessage() : "Unknown database error"));
+            }
+        });
+    }
+
+    private void showError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        setInProgress(false);
+    }
+
+    private void setInProgress(boolean inProgress) {
+        if (progressBar != null) {
+            progressBar.setVisibility(inProgress ? View.VISIBLE : View.GONE);
+        }
+        if (btnRegister != null) {
+            btnRegister.setEnabled(!inProgress);
+        }
     }
 }

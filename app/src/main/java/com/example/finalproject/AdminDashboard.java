@@ -21,13 +21,6 @@ public class AdminDashboard extends AppCompatActivity {
     private static final String TAG = "AdminDashboard";
 
     private TextView adminTitle;
-    private MaterialButton btnManageStudents;
-    private MaterialButton btnSignOut;
-    private MaterialButton btnScanQr;
-    private MaterialButton btnManageEbooks;
-    private MaterialButton btnViewUsers;
-    private MaterialButton btnConnection;
-    private MaterialButton btnManageAttendance;
 
     private FirebaseAuth mAuth;
     private DatabaseReference usersRef;
@@ -37,54 +30,45 @@ public class AdminDashboard extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_dashboard);
 
-        // initialize Firebase first so role guard can access the database
         mAuth = FirebaseAuth.getInstance();
         FirebaseDatabase db = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/");
         usersRef = db.getReference("users");
 
-        // guard: ensure signed-in user is admin or superadmin
         if (!checkAdminRole()) return;
 
         adminTitle = findViewById(R.id.tvAdminTitle);
-        btnManageStudents = findViewById(R.id.btnManageStudents);
-        btnSignOut = findViewById(R.id.btnAdminSignOut);
-        btnScanQr = findViewById(R.id.btnScanQr);
-        btnManageAttendance = findViewById(R.id.btnManageAttendance);
-        btnViewUsers = findViewById(R.id.btnViewUsers);
-        btnConnection = findViewById(R.id.btnConnection);
 
-        btnSignOut.setOnClickListener(v -> {
+        // Setup Buttons
+        findViewById(R.id.btnCreateAnnouncement).setOnClickListener(v -> startActivity(new Intent(AdminDashboard.this, CreateAnnouncementActivity.class)));
+        findViewById(R.id.btnManageStudents).setOnClickListener(v -> startActivity(new Intent(AdminDashboard.this, ManageStudentsActivity.class)));
+        findViewById(R.id.btnScanQr).setOnClickListener(v -> startActivity(new Intent(this, QRScannerActivity.class)));
+        findViewById(R.id.btnManageAttendance).setOnClickListener(v -> startActivity(new Intent(AdminDashboard.this, ManageAttendanceActivity.class)));
+        findViewById(R.id.btnViewUsers).setOnClickListener(v -> startActivity(new Intent(AdminDashboard.this, UsersListActivity.class)));
+        findViewById(R.id.btnConnection).setOnClickListener(v -> checkConnection());
+        findViewById(R.id.btnAdminSignOut).setOnClickListener(v -> {
             mAuth.signOut();
             startActivity(new Intent(AdminDashboard.this, AdminLoginActivity.class));
             finish();
         });
 
-        btnManageStudents.setOnClickListener(v -> startActivity(new Intent(AdminDashboard.this, ManageStudentsActivity.class)));
-
-        btnScanQr.setOnClickListener(v -> startActivity(new Intent(this, QRScannerActivity.class)));
-        btnManageAttendance.setOnClickListener(v -> startActivity(new Intent(AdminDashboard.this, ManageAttendanceActivity.class)));
-
-        btnViewUsers.setOnClickListener(v -> startActivity(new Intent(AdminDashboard.this, UsersListActivity.class)));
-
-        btnConnection.setOnClickListener(v -> checkConnection());
-
         loadAdminName();
     }
 
     private void checkConnection() {
-        // quick read attempt to verify RTDB connectivity
-        DatabaseReference pingRef = usersRef.getRoot().child("ping");
-        pingRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference connectedRef = usersRef.getRoot().child(".info/connected");
+        connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Toast.makeText(AdminDashboard.this, "Connected to database", Toast.LENGTH_SHORT).show();
-                adminTitle.setText("Admin Dashboard — Connected");
+                if (Boolean.TRUE.equals(snapshot.getValue(Boolean.class))) {
+                    Toast.makeText(AdminDashboard.this, "Connected to database", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(AdminDashboard.this, "Disconnected from database", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(AdminDashboard.this, "Connection failed: " + (error.getMessage() != null ? error.getMessage() : "unknown"), Toast.LENGTH_LONG).show();
-                adminTitle.setText("Admin Dashboard — Disconnected");
+                Toast.makeText(AdminDashboard.this, "Connection check failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -130,8 +114,9 @@ public class AdminDashboard extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String role = snapshot.child("role").getValue(String.class);
-                if (role == null || !(role.equals("admin") || role.equals("superadmin"))) {
+                if (!("admin".equals(role) || "superadmin".equals(role))) {
                     Toast.makeText(AdminDashboard.this, "Access denied", Toast.LENGTH_LONG).show();
+                    mAuth.signOut();
                     startActivity(new Intent(AdminDashboard.this, AdminLoginActivity.class));
                     finish();
                 }
@@ -144,6 +129,6 @@ public class AdminDashboard extends AppCompatActivity {
                 finish();
             }
         });
-        return true; // optimistic; actual finish happens in callbacks
+        return true;
     }
 }
