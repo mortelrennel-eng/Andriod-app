@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:fillViewport="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
+    android:background="@color/background"
+    android:fillViewport="true"
     android:padding="24dp">
 
     <LinearLayout
@@ -26,45 +26,38 @@
             android:layout_height="wrap_content"
             android:text="Admin Login"
             android:textSize="20sp"
-            android:textColor="@color/textPrimary"
+            android:textColor="@color/text_primary"
             android:layout_marginTop="12dp"
             android:textStyle="bold" />
 
-        <com.google.android.material.textfield.TextInputLayout
+        <EditText
+            android:id="@+id/txtAdminEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            app:endIconMode="clear_text">
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/txtAdminEmail"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Email"
-                android:inputType="textEmailAddress"
-                android:importantForAutofill="yes" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
+        <EditText
+            android:id="@+id/txtAdminPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            app:endIconMode="password_toggle">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/txtAdminPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Password"
-                android:inputType="textPassword" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
         <Button
             android:id="@+id/btnLoginAdmin"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Sign In"/>
+            android:text="Sign In"
+            android:background="@drawable/button_primary"
+            android:textColor="@color/white"/>
 
         <ProgressBar
             android:id="@+id/progressBarAdmin"
@@ -73,7 +66,7 @@
             android:layout_marginTop="14dp"
             android:visibility="gone" />
 
-        <!-- The registration text has been removed -->
+        <!-- Registration text is removed as per your instruction -->
 
     </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</ScrollView>

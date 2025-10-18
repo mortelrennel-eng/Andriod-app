@@ -8,83 +8,103 @@ import android.widget.ListView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ManageAttendanceActivity extends AppCompatActivity {
 
-    private ListView sectionsListView;
+    private ListView studentsListView;
     private ArrayAdapter<String> adapter;
-    private ArrayList<String> sectionList;
-    private SearchView searchView;
+    private ArrayList<String> studentDisplayList;
+    private Map<String, User> studentNameToUserMap;
+    private DatabaseReference rootRef;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_manage_attendance);
+        // We need a simple list layout, so we can reuse activity_manage_sections which has a ListView.
+        setContentView(R.layout.activity_manage_sections);
+
+        rootRef = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle("Attendance: Select Section");
+        getSupportActionBar().setTitle("Select Student to View Attendance");
 
-        searchView = findViewById(R.id.searchView);
-        sectionsListView = findViewById(R.id.sectionsListView);
+        studentsListView = findViewById(R.id.sectionsListView); // Reusing the ListView from this layout
         
-        sectionList = new ArrayList<>();
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, sectionList);
-        sectionsListView.setAdapter(adapter);
+        studentDisplayList = new ArrayList<>();
+        studentNameToUserMap = new HashMap<>();
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, studentDisplayList);
+        studentsListView.setAdapter(adapter);
 
-        setupSearchView();
-        loadSections();
+        loadAdminSectionAndStudents();
 
-        sectionsListView.setOnItemClickListener((parent, view, position, id) -> {
-            String sectionName = (String) parent.getItemAtPosition(position);
-            // This now opens the new activity to show a list of students
-            Intent intent = new Intent(ManageAttendanceActivity.this, StudentListForAttendanceActivity.class);
-            intent.putExtra("SECTION_NAME", sectionName);
-            startActivity(intent);
-        });
-    }
-
-    private void setupSearchView() {
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) { return false; }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                adapter.getFilter().filter(newText);
-                return true;
+        studentsListView.setOnItemClickListener((parent, view, position, id) -> {
+            String studentName = studentDisplayList.get(position);
+            User selectedStudent = studentNameToUserMap.get(studentName);
+            
+            if (selectedStudent != null) {
+                Intent intent = new Intent(this, AttendanceHistoryForStudentActivity.class);
+                intent.putExtra("STUDENT_UID", selectedStudent.getUid());
+                intent.putExtra("STUDENT_NAME", studentName);
+                startActivity(intent);
             }
         });
     }
 
-    private void loadSections() {
-        DatabaseReference sectionsRef = FirebaseDatabase.getInstance().getReference("sections");
-        sectionsRef.addValueEventListener(new ValueEventListener() {
+    private void loadAdminSectionAndStudents() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) return;
+
+        rootRef.child("users").child(currentUser.getUid()).child("section").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                sectionList.clear();
-                if (snapshot.exists()) {
-                    for (DataSnapshot sectionSnapshot : snapshot.getChildren()) {
-                        sectionList.add(sectionSnapshot.getKey());
-                    }
-                    adapter.notifyDataSetChanged();
+                String sectionName = snapshot.getValue(String.class);
+                if (sectionName != null) {
+                    loadStudents(sectionName);
                 } else {
-                    Toast.makeText(ManageAttendanceActivity.this, "No sections found.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ManageAttendanceActivity.this, "You are not assigned to a section.", Toast.LENGTH_LONG).show();
                 }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
+    }
+
+    private void loadStudents(String sectionName) {
+        rootRef.child("users").orderByChild("section").equalTo(sectionName).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                studentDisplayList.clear();
+                studentNameToUserMap.clear();
+                for (DataSnapshot userSnapshot : snapshot.getChildren()) {
+                    User user = userSnapshot.getValue(User.class);
+                    if (user != null && "student".equals(user.getRole())) {
+                        user.setUid(userSnapshot.getKey());
+                        String name = user.getFirstName() + " " + user.getLastName();
+                        studentDisplayList.add(name);
+                        studentNameToUserMap.put(name, user);
+                    }
+                }
+                adapter.notifyDataSetChanged();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ManageAttendanceActivity.this, "Failed to load sections.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManageAttendanceActivity.this, "Failed to load students.", Toast.LENGTH_SHORT).show();
             }
         });
     }

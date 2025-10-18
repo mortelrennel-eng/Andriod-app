@@ -1,81 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:fillViewport="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
-    android:padding="24dp">
+    android:background="@color/background"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
         <TextView
-            android:id="@+id/tvAdminTitle"
+            android:id="@+id/tvAdminWelcome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:text="Admin Dashboard"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary" />
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="24dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCreateAnnouncement"
-            style="@style/Widget.App.Button"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="18dp"
-            android:text="Create Announcement" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnManageStudents"
-            style="@style/Widget.App.Button"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="18dp"
-            android:text="👩‍🏫 Manage Students" />
-
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btnScanQr"
-            style="@style/Widget.App.Button"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:text="🔍 Scan QR (Attendance)" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/button_primary"
+            android:textColor="@color/white"
+            android:minHeight="60dp"
+            android:text="Scan QR for Attendance" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnManageAttendance"
-            style="@style/Widget.App.Button"
+        <Button
+            android:id="@+id/btnViewAttendance"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:text="📈 Manage Attendance" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/button_primary"
+            android:textColor="@color/white"
+            android:minHeight="60dp"
+            android:text="View Section Attendance" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnViewUsers"
-            style="@style/Widget.App.Button"
+         <Button
+            android:id="@+id/btnViewMySection"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:text="View Users" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/button_primary"
+            android:textColor="@color/white"
+            android:minHeight="60dp"
+            android:text="View My Section Students" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnConnection"
-            style="@style/Widget.App.Button"
+        <View
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:text="Connection" />
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btnAdminSignOut"
-            style="@style/Widget.App.Button"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:text="Sign Out" />
+            android:layout_height="wrap_content"
+            android:text="Sign Out"
+            android:backgroundTint="@color/accent"/>
 
     </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</ScrollView>

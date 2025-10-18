@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/background"
-    tools:context=".ManageAttendanceActivity">
+    tools:context=".ViewMySectionActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -15,11 +15,9 @@
         android:background="@color/primary"
         app:titleTextColor="@color/white" />
 
-    <!-- This is the RecyclerView that the Java code is looking for -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/attendanceRecyclerView"
+        android:id="@+id/studentsRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" 
-        android:padding="8dp"/>
+        android:layout_height="match_parent" />
 
 </LinearLayout>

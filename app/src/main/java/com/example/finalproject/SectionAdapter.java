@@ -1,6 +1,5 @@
 package com.example.finalproject;
 
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,10 +7,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.util.ArrayList;
 
-public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionViewHolder> {
+public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.ViewHolder> {
 
     private ArrayList<Section> sectionList;
     private ManageSectionsActivity activity;
@@ -23,30 +21,21 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
 
     @NonNull
     @Override
-    public SectionViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_section, parent, false);
-        return new SectionViewHolder(view);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull SectionViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Section section = sectionList.get(position);
-        holder.tvSectionName.setText(section.getName());
+        holder.tvSectionName.setText(section.getSectionName());
         holder.tvManagedBy.setText("Managed by: " + section.getManagedBy());
 
-        holder.btnViewStudents.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), ViewStudentsInSectionActivity.class);
-            intent.putExtra("SECTION_NAME", section.getName());
-            v.getContext().startActivity(intent);
-        });
-
-        holder.btnAddStudents.setOnClickListener(v -> {
-            activity.addStudentsToSection(section.getName());
-        });
-
-        holder.btnDeleteSection.setOnClickListener(v -> {
-            activity.deleteSection(section.getName());
-        });
+        // --- Connect buttons to the methods in ManageSectionsActivity ---
+        holder.btnViewStudents.setOnClickListener(v -> activity.viewStudentsInSection(section.getSectionName()));
+        holder.btnAddStudents.setOnClickListener(v -> activity.addStudentsToSection(section.getSectionName()));
+        holder.btnDeleteSection.setOnClickListener(v -> activity.deleteSection(section.getSectionName()));
     }
 
     @Override
@@ -54,11 +43,11 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
         return sectionList.size();
     }
 
-    public static class SectionViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvSectionName, tvManagedBy;
         Button btnViewStudents, btnAddStudents, btnDeleteSection;
 
-        public SectionViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvSectionName = itemView.findViewById(R.id.tvSectionName);
             tvManagedBy = itemView.findViewById(R.id.tvManagedBy);

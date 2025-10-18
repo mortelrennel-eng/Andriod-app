@@ -54,8 +54,9 @@
         <activity android:name=".StudentListBySectionActivity" />
         <activity android:name=".AttendanceListBySectionActivity" />
         <activity android:name=".EditStudentActivity" />
-        <activity android:name=".StudentListForAttendanceActivity" /> <!-- NEW -->
-        <activity android:name=".AttendanceHistoryForStudentActivity" /> <!-- NEW -->
+        <activity android:name=".StudentListForAttendanceActivity" />
+        <activity android:name=".AttendanceHistoryForStudentActivity" /> 
+        <activity android:name=".ViewMySectionActivity" /> <!-- NEW -->
 
         <!-- ✅ Student Features -->
         <activity android:name=".StudentDashboard" />

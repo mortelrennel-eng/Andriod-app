@@ -1,11 +1,12 @@
 package com.example.finalproject;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.text.InputType;
+import android.text.TextUtils;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -58,54 +59,147 @@ public class ManageSectionsActivity extends AppCompatActivity {
         loadSections();
     }
 
-    // ... (rest of the methods like loadSections, showAddSectionDialog, etc. remain the same)
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed(); // This will take the user back to the previous screen
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-    
-    // All other methods from the previous correct version of this file should be here.
-    // I am omitting them for brevity, but they are essential.
     private void loadSections() {
         rootRef.child("sections").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 sectionList.clear();
-                for (DataSnapshot sectionSnapshot : snapshot.getChildren()) {
-                    String sectionName = sectionSnapshot.getKey();
-                    String managedBy = sectionSnapshot.child("managedBy").getValue(String.class);
-                    sectionList.add(new Section(sectionName, managedBy != null ? managedBy : "Not Assigned"));
+                if (snapshot.exists()) {
+                    for (DataSnapshot sectionSnapshot : snapshot.getChildren()) {
+                        String sectionName = sectionSnapshot.getKey();
+                        String managedBy = sectionSnapshot.child("managedBy").getValue(String.class);
+                        sectionList.add(new Section(sectionName, managedBy != null ? managedBy : "Not Assigned"));
+                    }
+                } else {
+                    showToast("No sections found. Click the '+' button to add one.");
                 }
                 sectionAdapter.notifyDataSetChanged();
             }
+
             @Override
-            public void onCancelled(@NonNull DatabaseError error) { showToast("Failed to load sections."); }
+            public void onCancelled(@NonNull DatabaseError error) {
+                showToast("Failed to load sections.");
+            }
         });
     }
 
     private void showAddSectionDialog() {
-        // ... Implementation from before
-    }
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_section, null);
+        EditText edtSectionName = dialogView.findViewById(R.id.edtSectionName);
+        Spinner spinnerAdmins = dialogView.findViewById(R.id.spinnerAdmins);
 
-    public void addStudentsToSection(String sectionName) {
-        // ... Implementation from before
-    }
+        loadAdminsIntoSpinner(spinnerAdmins);
 
-    private void assignStudentsToSection(String sectionName, List<String> studentUids) {
-       // ... Implementation from before
-    }
+        new AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setPositiveButton("Add", (dialog, which) -> {
+                String sectionName = edtSectionName.getText().toString().trim();
+                String selectedAdminName = (String) spinnerAdmins.getSelectedItem();
 
-    public void deleteSection(String sectionName) {
-       // ... Implementation from before
+                if (TextUtils.isEmpty(sectionName) || selectedAdminName == null) {
+                    showToast("Section name and admin are required.");
+                    return;
+                }
+                createNewSection(sectionName, selectedAdminName);
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
 
     private void loadAdminsIntoSpinner(Spinner spinner) {
-        // ... Implementation from before
+        List<String> adminNames = new ArrayList<>();
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, adminNames);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapter);
+
+        rootRef.child("users").orderByChild("role").equalTo("admin").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                adminNames.clear();
+                adminNameToUidMap.clear();
+                for (DataSnapshot adminSnapshot : snapshot.getChildren()) {
+                    String name = adminSnapshot.child("firstName").getValue(String.class);
+                    String uid = adminSnapshot.getKey();
+                    adminNames.add(name);
+                    adminNameToUidMap.put(name, uid);
+                }
+                spinnerAdapter.notifyDataSetChanged();
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
+    }
+
+    private void createNewSection(String sectionName, String adminName) {
+        String adminUid = adminNameToUidMap.get(adminName);
+        if (adminUid == null) {
+            showToast("Could not find UID for selected admin.");
+            return;
+        }
+
+        Map<String, Object> sectionData = new HashMap<>();
+        sectionData.put("managedBy", adminName);
+
+        rootRef.child("sections").child(sectionName).setValue(sectionData).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                rootRef.child("users").child(adminUid).child("section").setValue(sectionName);
+                showToast("Section created and assigned.");
+            } else {
+                showToast("Failed to create section.");
+            }
+        });
+    }
+
+    public void addStudentsToSection(String sectionName) {
+        Intent intent = new Intent(this, AddStudentsToSectionActivity.class);
+        intent.putExtra("SECTION_NAME", sectionName);
+        startActivity(intent);
+    }
+
+    public void viewStudentsInSection(String sectionName) {
+        Intent intent = new Intent(this, ViewStudentsInSectionActivity.class);
+        intent.putExtra("SECTION_NAME", sectionName);
+        startActivity(intent);
+    }
+
+    public void deleteSection(String sectionName) {
+        new AlertDialog.Builder(this)
+            .setTitle("Delete Section")
+            .setMessage("Are you sure you want to delete section '" + sectionName + "'? All students in this section will become unassigned.")
+            .setPositiveButton("Delete", (dialog, which) -> {
+                rootRef.child("users").orderByChild("section").equalTo(sectionName).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        Map<String, Object> updates = new HashMap<>();
+                        updates.put("/sections/" + sectionName, null);
+
+                        for (DataSnapshot userSnapshot : snapshot.getChildren()) {
+                            updates.put("/users/" + userSnapshot.getKey() + "/section", null);
+                        }
+                        
+                        rootRef.updateChildren(updates).addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                showToast("Section deleted and students unassigned.");
+                            } else {
+                                showToast("An error occurred.");
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        showToast("Failed to find students to unassign.");
+                    }
+                });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) { onBackPressed(); return true; }
+        return super.onOptionsItemSelected(item);
     }
 
     private void showToast(String message) {

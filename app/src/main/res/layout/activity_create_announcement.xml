@@ -5,14 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5" 
+    android:background="@color/background"
     tools:context=".CreateAnnouncementActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="@color/primary"
         app:title="Create Announcement"
         app:titleTextColor="@color/white" />
 
@@ -27,8 +27,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Announcement Title"
-            android:background="@drawable/rounded_edittext"
-            android:padding="12dp" />
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
         <EditText
             android:id="@+id/edtAnnouncementContent"
@@ -38,8 +38,8 @@
             android:layout_marginTop="12dp"
             android:hint="Announcement Content"
             android:gravity="top"
-            android:background="@drawable/rounded_edittext"
-            android:padding="12dp" />
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
         <Button
             android:id="@+id/btnPostAnnouncement"
@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Post Announcement"
-            android:background="@drawable/rounded_button"
+            android:background="@drawable/button_primary"
             android:textColor="@color/white"/>
 
     </LinearLayout>

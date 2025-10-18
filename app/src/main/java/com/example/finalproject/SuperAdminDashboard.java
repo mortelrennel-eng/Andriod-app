@@ -37,12 +37,15 @@ public class SuperAdminDashboard extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference();
 
-        // --- SETUP ALL BUTTONS HERE ---
+        // --- Using the CORRECT IDs from the new layout ---
         findViewById(R.id.btnRegisterSuperAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterSuperAdminActivity.class)));
         findViewById(R.id.btnRegisterAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterAdminActivity.class)));
         findViewById(R.id.btnManageAdmins).setOnClickListener(v -> startActivity(new Intent(this, ManageAdminsActivity.class)));
         findViewById(R.id.btnViewAllUsers).setOnClickListener(v -> startActivity(new Intent(this, UsersListActivity.class)));
-        findViewById(R.id.btnUploadEbook).setOnClickListener(v -> startActivity(new Intent(this, AddEbookActivity.class)));
+        
+        // *** THIS IS THE FIX: The ID is now btnAddEbook ***
+        findViewById(R.id.btnAddEbook).setOnClickListener(v -> startActivity(new Intent(this, AddEbookActivity.class)));
+        
         findViewById(R.id.btnManageEbooks).setOnClickListener(v -> startActivity(new Intent(this, EbookManagerActivity.class)));
         findViewById(R.id.btnManageStudents).setOnClickListener(v -> startActivity(new Intent(this, ManageStudentsActivity.class)));
         findViewById(R.id.btnManageAttendance).setOnClickListener(v -> startActivity(new Intent(this, ManageAttendanceActivity.class)));
@@ -57,6 +60,9 @@ public class SuperAdminDashboard extends AppCompatActivity {
             finish();
         });
     }
+
+    // ... (The rest of the file remains the same)
+    // ... (showSetAttendanceDayDialog, markPreviousAbsenteesAndSetNewDay, setNewAttendanceDay)
 
     private void showSetAttendanceDayDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

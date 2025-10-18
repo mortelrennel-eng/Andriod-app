@@ -44,7 +44,7 @@ public class EbookListActivity extends AppCompatActivity {
     }
 
     private void loadEbooks() {
-        DatabaseReference ebooksRef = FirebaseDatabase.getInstance().getReference("ebooks");
+        DatabaseReference ebooksRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("ebooks");
         ebooksRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -69,11 +69,14 @@ public class EbookListActivity extends AppCompatActivity {
         });
     }
 
-    // Method to be called by the adapter
     public void openEbook(Ebook ebook) {
         if (ebook.getFileUrl() != null && !ebook.getFileUrl().isEmpty()) {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(ebook.getFileUrl()));
-            startActivity(browserIntent);
+            try {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(ebook.getFileUrl()));
+                startActivity(browserIntent);
+            } catch (Exception e) {
+                Toast.makeText(this, "Could not open link. Please ensure a web browser is installed.", Toast.LENGTH_LONG).show();
+            }
         } else {
             Toast.makeText(this, "E-book link is not available.", Toast.LENGTH_SHORT).show();
         }

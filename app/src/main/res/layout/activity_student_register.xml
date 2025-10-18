@@ -1,47 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:fillViewport="true"
+    android:padding="24dp">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:padding="24dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
-        <LinearLayout
-            android:orientation="vertical"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Student Registration"
+            android:textSize="20sp"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="12dp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/edtFirstName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center">
+            android:layout_marginTop="18dp"
+            android:hint="First Name"
+            android:inputType="textPersonName"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
-            <!-- All EditText fields go here -->
-            <EditText android:id="@+id/edtFirstName" android:hint="First Name" android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <EditText android:id="@+id/edtLastName" android:hint="Last Name" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <EditText android:id="@+id/edtStudentId" android:hint="Student ID (e.g., 000-00)" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <EditText android:id="@+id/edtEmail" android:hint="Email" android:inputType="textEmailAddress" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <EditText android:id="@+id/edtContactNumber" android:hint="Contact Number" android:inputType="phone" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <EditText android:id="@+id/edtPassword" android:hint="Password" android:inputType="textPassword" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <EditText
+            android:id="@+id/edtLastName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Last Name"
+            android:inputType="textPersonName"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
+
+        <EditText
+            android:id="@+id/edtStudentId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Student ID"
+            android:inputType="text"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
             
-            <TextView android:text="Parent/Guardian Information" android:textSize="18sp" android:textStyle="bold" android:layout_marginTop="24dp" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-            <EditText android:id="@+id/edtParentName" android:hint="Parent/Guardian Name" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <EditText android:id="@+id/edtParentContactNumber" android:hint="Parent/Guardian Contact Number" android:inputType="phone" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <EditText
+            android:id="@+id/edtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
-            <Button
-                android:id="@+id/btnRegister"
-                android:text="Register"
-                android:layout_marginTop="24dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+        <EditText
+            android:id="@+id/edtContactNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Contact Number"
+            android:inputType="phone"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
-        </LinearLayout>
-    </ScrollView>
+        <EditText
+            android:id="@+id/edtParentName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Parent's Name"
+            android:inputType="textPersonName"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:visibility="gone" />
+        <EditText
+            android:id="@+id/edtParentContactNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Parent's Contact Number"
+            android:inputType="phone"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
 
-</RelativeLayout>
+        <EditText
+            android:id="@+id/edtPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:background="@drawable/edittext_background"
+            android:padding="14dp" />
+
+        <Button
+            android:id="@+id/btnRegister"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Register"
+            android:background="@drawable/button_primary"
+            android:textColor="@color/white"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="14dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</ScrollView>

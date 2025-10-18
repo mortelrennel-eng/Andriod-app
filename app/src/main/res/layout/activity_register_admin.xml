@@ -5,37 +5,54 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/background"
     tools:context=".RegisterAdminActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:titleTextColor="@android:color/white" />
+        android:background="@color/primary"
+        app:titleTextColor="@color/white" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="24dp">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Register New Admin"
+                android:textSize="20sp"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/adminFirstName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="First Name" />
+                android:layout_marginTop="18dp"
+                android:hint="First Name"
+                android:inputType="textPersonName"
+                android:background="@drawable/edittext_background"
+                android:padding="14dp" />
 
             <EditText
                 android:id="@+id/adminLastName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:hint="Last Name" />
+                android:hint="Last Name"
+                android:inputType="textPersonName"
+                android:background="@drawable/edittext_background"
+                android:padding="14dp" />
 
             <EditText
                 android:id="@+id/adminEmail"
@@ -43,14 +60,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:hint="Email"
-                android:inputType="textEmailAddress" />
+                android:inputType="textEmailAddress"
+                android:background="@drawable/edittext_background"
+                android:padding="14dp" />
 
             <EditText
                 android:id="@+id/adminSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:hint="Section (Optional)" />
+                android:hint="Section (Optional)"
+                android:inputType="text"
+                android:background="@drawable/edittext_background"
+                android:padding="14dp" />
 
             <EditText
                 android:id="@+id/adminPassword"
@@ -58,7 +80,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:hint="Password (min 6 chars)"
-                android:inputType="textPassword" />
+                android:inputType="textPassword"
+                android:background="@drawable/edittext_background"
+                android:padding="14dp" />
 
             <ProgressBar
                 android:id="@+id/progressBarAdminRegister"
@@ -74,7 +98,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Register Admin" />
+                android:text="Register Admin"
+                android:background="@drawable/button_primary"
+                android:textColor="@color/white"/>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

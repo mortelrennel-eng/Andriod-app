@@ -1,11 +1,13 @@
 package com.example.finalproject;
 
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.view.MenuItem;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -15,46 +17,49 @@ import java.util.ArrayList;
 
 public class ViewStudentsInSectionActivity extends AppCompatActivity {
 
-    private ListView studentsListView;
-    private ArrayAdapter<String> adapter;
-    private ArrayList<String> studentList;
+    private RecyclerView studentsRecyclerView;
+    private SimpleStudentAdapter studentAdapter;
+    private ArrayList<User> studentList;
+    private String sectionName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_students_in_section);
 
-        studentsListView = findViewById(R.id.studentsListView);
+        sectionName = getIntent().getStringExtra("SECTION_NAME");
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(sectionName + " Students");
+
+        studentsRecyclerView = findViewById(R.id.studentsRecyclerView);
+        studentsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        
         studentList = new ArrayList<>();
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, studentList);
-        studentsListView.setAdapter(adapter);
+        studentAdapter = new SimpleStudentAdapter(studentList);
+        studentsRecyclerView.setAdapter(studentAdapter);
 
-        String sectionName = getIntent().getStringExtra("SECTION_NAME");
-
-        loadStudentsInSection(sectionName);
+        loadStudents();
     }
 
-    private void loadStudentsInSection(String sectionName) {
-        DatabaseReference sectionRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("sections").child(sectionName).child("students");
-        sectionRef.addValueEventListener(new ValueEventListener() {
+    private void loadStudents() {
+        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+        usersRef.orderByChild("section").equalTo(sectionName).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 studentList.clear();
-                for (DataSnapshot studentIdSnapshot : snapshot.getChildren()) {
-                    String studentId = studentIdSnapshot.getKey();
-                    DatabaseReference userRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference("users").child(studentId);
-                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot userSnapshot) {
-                            String name = userSnapshot.child("firstName").getValue(String.class) + " " + userSnapshot.child("lastName").getValue(String.class);
-                            studentList.add(name);
-                            adapter.notifyDataSetChanged();
+                if (snapshot.exists()) {
+                    for (DataSnapshot userSnapshot : snapshot.getChildren()) {
+                        User user = userSnapshot.getValue(User.class);
+                        if (user != null && "student".equals(user.getRole())) {
+                            studentList.add(user);
                         }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                        }
-                    });
+                    }
+                    studentAdapter.notifyDataSetChanged();
+                } else {
+                    Toast.makeText(ViewStudentsInSectionActivity.this, "No students found in this section.", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -63,5 +68,14 @@ public class ViewStudentsInSectionActivity extends AppCompatActivity {
                 Toast.makeText(ViewStudentsInSectionActivity.this, "Failed to load students.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

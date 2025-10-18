@@ -13,7 +13,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button btnSuperAdmin = findViewById(R.id.btnSuperadmin);
+        // *** THIS IS THE FIX: Using the correct ID with a capital 'A' ***
+        Button btnSuperAdmin = findViewById(R.id.btnSuperAdmin);
         Button btnAdmin = findViewById(R.id.btnAdmin);
         Button btnStudent = findViewById(R.id.btnStudent);
 
