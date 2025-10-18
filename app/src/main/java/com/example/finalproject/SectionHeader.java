@@ -1,13 +1,13 @@
 package com.example.finalproject;
 
 public class SectionHeader {
-    private String sectionName;
+    private String title;
 
-    public SectionHeader(String sectionName) {
-        this.sectionName = sectionName;
+    public SectionHeader(String title) {
+        this.title = title;
     }
 
-    public String getSectionName() {
-        return sectionName;
+    public String getTitle() {
+        return title;
     }
 }

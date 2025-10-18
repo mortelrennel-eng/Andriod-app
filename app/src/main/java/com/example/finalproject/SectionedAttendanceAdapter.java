@@ -8,14 +8,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
-public class UserSectionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class SectionedAttendanceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
 
     private List<Object> itemList;
 
-    public UserSectionAdapter(List<Object> itemList) {
+    public SectionedAttendanceAdapter(List<Object> itemList) {
         this.itemList = itemList;
     }
 
@@ -35,8 +35,8 @@ public class UserSectionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_section_header, parent, false);
             return new HeaderViewHolder(view);
         } else {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_user_simple, parent, false);
-            return new UserViewHolder(view);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_admin_attendance_record, parent, false);
+            return new ItemViewHolder(view);
         }
     }
 
@@ -45,13 +45,13 @@ public class UserSectionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         if (holder.getItemViewType() == TYPE_HEADER) {
             HeaderViewHolder headerHolder = (HeaderViewHolder) holder;
             SectionHeader header = (SectionHeader) itemList.get(position);
-            // *** THIS IS THE FIX: Use getTitle() instead of getSectionName() ***
-            headerHolder.tvSectionName.setText(header.getTitle());
+            headerHolder.tvSectionHeader.setText(header.getTitle());
         } else {
-            UserViewHolder userHolder = (UserViewHolder) holder;
-            User user = (User) itemList.get(position);
-            userHolder.tvUserName.setText(user.getFirstName() + " " + user.getLastName());
-            userHolder.tvUserRole.setText(user.getRole());
+            ItemViewHolder itemHolder = (ItemViewHolder) holder;
+            AdminAttendanceRecord record = (AdminAttendanceRecord) itemList.get(position);
+            itemHolder.tvStudentName.setText(record.studentName);
+            itemHolder.tvStatus.setText(record.status);
+            itemHolder.tvDate.setText(record.date + " - " + record.sessionTitle);
         }
     }
 
@@ -62,20 +62,21 @@ public class UserSectionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     // ViewHolder for Section Headers
     public static class HeaderViewHolder extends RecyclerView.ViewHolder {
-        TextView tvSectionName;
+        TextView tvSectionHeader;
         public HeaderViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvSectionName = itemView.findViewById(R.id.tvSectionHeader);
+            tvSectionHeader = itemView.findViewById(R.id.tvSectionHeader);
         }
     }
 
-    // ViewHolder for User Items
-    public static class UserViewHolder extends RecyclerView.ViewHolder {
-        TextView tvUserName, tvUserRole;
-        public UserViewHolder(@NonNull View itemView) {
+    // ViewHolder for Attendance Items
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
+        TextView tvStudentName, tvStatus, tvDate;
+        public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvUserName = itemView.findViewById(R.id.tvUserName);
-            tvUserRole = itemView.findViewById(R.id.tvUserRole);
+            tvStudentName = itemView.findViewById(R.id.tvStudentName);
+            tvStatus = itemView.findViewById(R.id.tvStatus);
+            tvDate = itemView.findViewById(R.id.tvDate);
         }
     }
 }

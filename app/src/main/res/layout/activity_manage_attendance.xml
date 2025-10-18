@@ -13,13 +13,19 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/primary"
+        app:title="All Attendance Records"
         app:titleTextColor="@color/white" />
 
-    <!-- This is the RecyclerView that the Java code is looking for -->
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:queryHint="Search by student, section, or status..." />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/attendanceRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" 
+        android:layout_height="match_parent"
         android:padding="8dp"/>
 
 </LinearLayout>

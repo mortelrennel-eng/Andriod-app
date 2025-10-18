@@ -6,5 +6,6 @@
     android:padding="16dp"
     android:textSize="18sp"
     android:textStyle="bold"
-    android:background="#E0E0E0"
-    android:textColor="@android:color/black" />
+    android:background="@color/primary"
+    android:textColor="@color/white"
+    android:text="Section Name - Managed by: Admin"/>
