@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppThemeLocal" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:colorBackground">@color/bg</item>
+        <item name="android:textColor">@color/textPrimary</item>
+        <item name="android:buttonStyle">@style/AppButtonLocal</item>
+    </style>
+
+    <style name="AppButtonLocal" parent="Widget.AppCompat.Button">
+        <item name="android:backgroundTint">@color/primary</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+    </style>
+
+    <style name="CardRowLocal">
+        <item name="android:background">@android:color/white</item>
+        <item name="android:padding">10dp</item>
+    </style>
+</resources>

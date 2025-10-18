@@ -1,0 +1,41 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superadmin' || (auth.uid === $uid && ((!data.exists() && newData.child('role').val() === 'student') || (data.exists() && newData.child('role').val() === data.child('role').val()))))"
+      }
+    },
+
+    "attendanceDay": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'superadmin'"
+    },
+
+    "attendance": {
+      "$studentUid": {
+        "$recordId": {
+          ".read": "auth != null && (auth.uid === $studentUid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'superadmin')",
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superadmin' || (root.child('users').child(auth.uid).child('role').val() === 'admin' && root.child('users').child(auth.uid).child('section').val() === root.child('users').child($studentUid).child('section').val())))"
+        }
+      }
+    },
+
+    "sections": {
+      "$section": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'superadmin'"
+      }
+    },
+
+    "ebooks": {
+      "$ebookId": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'superadmin'"
+      }
+    },
+
+    ".read": "auth != null",
+    ".write": "false"
+  }
+}
