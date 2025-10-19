@@ -44,8 +44,9 @@
         <activity android:name=".EbookManagerActivity" />
         <activity android:name=".ViewAdminsActivity" />
         <activity android:name=".QRGeneratorActivity" />
-        <activity android:name=".ManageAttendanceActivity" /> <!-- Super Admin's View -->
-        <activity android:name=".AdminViewAttendanceActivity" /> <!-- NEW: Admin's View -->
+        <activity android:name=".ManageAttendanceActivity" /> 
+        <activity android:name=".AdminViewAttendanceActivity" />
+        <activity android:name=".AbsenteesListActivity" /> <!-- NEW -->
         <activity android:name=".CreateAnnouncementActivity" />
         <activity android:name=".ManageAdminsActivity" />
         <activity android:name=".SectionAttendanceActivity" />

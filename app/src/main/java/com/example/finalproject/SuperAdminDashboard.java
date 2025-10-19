@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -28,6 +29,7 @@ public class SuperAdminDashboard extends AppCompatActivity {
     private static final String TAG = "SuperAdminDashboard";
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
+    private TextView tvTotalSections, tvTotalStudents, tvFrequentAbsentees;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,19 +39,20 @@ public class SuperAdminDashboard extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference();
 
-        // --- Using the CORRECT IDs from the new layout ---
+        tvTotalSections = findViewById(R.id.tvTotalSections);
+        tvTotalStudents = findViewById(R.id.tvTotalStudents);
+        tvFrequentAbsentees = findViewById(R.id.tvFrequentAbsentees);
+
         findViewById(R.id.btnRegisterSuperAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterSuperAdminActivity.class)));
         findViewById(R.id.btnRegisterAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterAdminActivity.class)));
         findViewById(R.id.btnManageAdmins).setOnClickListener(v -> startActivity(new Intent(this, ManageAdminsActivity.class)));
         findViewById(R.id.btnViewAllUsers).setOnClickListener(v -> startActivity(new Intent(this, UsersListActivity.class)));
-        
-        // *** THIS IS THE FIX: The ID is now btnAddEbook ***
         findViewById(R.id.btnAddEbook).setOnClickListener(v -> startActivity(new Intent(this, AddEbookActivity.class)));
-        
         findViewById(R.id.btnManageEbooks).setOnClickListener(v -> startActivity(new Intent(this, EbookManagerActivity.class)));
         findViewById(R.id.btnManageStudents).setOnClickListener(v -> startActivity(new Intent(this, ManageStudentsActivity.class)));
         findViewById(R.id.btnManageAttendance).setOnClickListener(v -> startActivity(new Intent(this, ManageAttendanceActivity.class)));
         findViewById(R.id.btnManageSections).setOnClickListener(v -> startActivity(new Intent(this, ManageSectionsActivity.class)));
+        findViewById(R.id.btnViewAbsences).setOnClickListener(v -> startActivity(new Intent(this, AbsenteesListActivity.class)));
         findViewById(R.id.btnSetAttendanceDay).setOnClickListener(v -> showSetAttendanceDayDialog());
         
         findViewById(R.id.btnLogout).setOnClickListener(v -> {
@@ -59,15 +62,60 @@ public class SuperAdminDashboard extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+        
+        loadDashboardStats();
     }
 
-    // ... (The rest of the file remains the same)
-    // ... (showSetAttendanceDayDialog, markPreviousAbsenteesAndSetNewDay, setNewAttendanceDay)
+    private void loadDashboardStats() {
+        rootRef.child("sections").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(tvTotalSections != null) tvTotalSections.setText(String.valueOf(snapshot.getChildrenCount()));
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
+
+        rootRef.child("users").orderByChild("role").equalTo("student").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(tvTotalStudents != null) tvTotalStudents.setText(String.valueOf(snapshot.getChildrenCount()));
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
+
+        rootRef.child("attendance_by_day").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Map<String, Integer> absenceCount = new HashMap<>();
+                for (DataSnapshot day : snapshot.getChildren()) {
+                    for (DataSnapshot session : day.getChildren()) {
+                        for (DataSnapshot record : session.getChildren()) {
+                            String studentUid = record.getKey();
+                            String status = record.child("status").getValue(String.class);
+                            if ("Absent".equalsIgnoreCase(status)) {
+                                absenceCount.put(studentUid, absenceCount.getOrDefault(studentUid, 0) + 1);
+                            }
+                        }
+                    }
+                }
+                int frequentAbsentees = 0;
+                for (int count : absenceCount.values()) {
+                    if (count >= 2) {
+                        frequentAbsentees++;
+                    }
+                }
+                if(tvFrequentAbsentees != null) tvFrequentAbsentees.setText(String.valueOf(frequentAbsentees));
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
+    }
 
     private void showSetAttendanceDayDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_set_attendance, null);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_set_attendance, null);
         builder.setView(dialogView);
 
         final EditText edtTitle = dialogView.findViewById(R.id.edtAttendanceTitle);
@@ -76,14 +124,12 @@ public class SuperAdminDashboard extends AppCompatActivity {
         builder.setPositiveButton("Set", (dialog, which) -> {
             String title = edtTitle.getText().toString().trim();
             String lateTime = edtLateTime.getText().toString().trim();
-
             if (TextUtils.isEmpty(title) || TextUtils.isEmpty(lateTime)) {
                 Toast.makeText(this, "All fields are required.", Toast.LENGTH_SHORT).show();
                 return;
             }
             markPreviousAbsenteesAndSetNewDay(title, lateTime);
         });
-
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.create().show();
     }
@@ -110,7 +156,6 @@ public class SuperAdminDashboard extends AppCompatActivity {
                             }
                             @Override
                             public void onCancelled(@NonNull DatabaseError error) {
-                                Log.e(TAG, "Failed to query absentees.", error.toException());
                                 setNewAttendanceDay(newTitle, newLateTime);
                             }
                         });
@@ -124,7 +169,6 @@ public class SuperAdminDashboard extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "Failed to read previous attendanceDay.", error.toException());
                 setNewAttendanceDay(newTitle, newLateTime);
             }
         });

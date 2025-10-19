@@ -20,12 +20,53 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="16dp" />
 
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            android:layout_marginBottom="16dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView android:id="@+id/tvTotalSections" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/primary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sections"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView android:id="@+id/tvTotalStudents" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/primary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Students"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView android:id="@+id/tvFrequentAbsentees" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/red"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Absentees"/>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+        
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="User Management"
+            android:text="Management Tools"
             android:textStyle="bold"
             android:textColor="@color/primary"/>
         
@@ -35,134 +76,29 @@
             android:columnCount="2"
             android:layout_marginTop="8dp">
 
-            <Button
-                android:id="@+id/btnRegisterAdmin"
-                android:layout_width="0dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="Register Admin" />
-            
-            <Button
-                android:id="@+id/btnManageAdmins"
-                android:layout_width="0dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="Manage Admins" />
-
-            <Button
-                android:id="@+id/btnManageStudents"
-                android:layout_width="0dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="Manage Students" />
-
-             <Button
-                android:id="@+id/btnViewAllUsers"
-                android:layout_width="0dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="View All Users" />
+            <Button android:id="@+id/btnRegisterAdmin" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Register Admin" />
+            <Button android:id="@+id/btnManageAdmins" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Manage Admins" />
+            <Button android:id="@+id/btnManageStudents" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Manage Students" />
+            <Button android:id="@+id/btnViewAllUsers" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="View All Users" />
+            <Button android:id="@+id/btnManageSections" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Manage Sections" />
+            <Button android:id="@+id/btnSetAttendanceDay" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Set Attendance" />
+            <Button android:id="@+id/btnAddEbook" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Add E-Book" />
+            <Button android:id="@+id/btnManageEbooks" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Manage E-Books" />
         </GridLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Content Management"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"
-            android:textColor="@color/primary"/>
-            
-        <GridLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="2"
-            android:layout_marginTop="8dp">
-
-            <Button
-                android:id="@+id/btnAddEbook"
-                android:layout_width="0dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="Add E-Book" />
-
-            <Button
-                android:id="@+id/btnManageEbooks"
-                android:layout_width="0dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="Manage E-Books" />
-        </GridLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Academic Management"
+            android:text="Attendance Monitoring"
             android:textStyle="bold"
             android:layout_marginTop="16dp"
             android:textColor="@color/primary"/>
 
-        <GridLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="2"
-            android:layout_marginTop="8dp">
-
-             <Button
-                android:id="@+id/btnManageSections"
-                android:layout_width="0dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="Manage Sections" />
-
-             <Button
-                android:id="@+id/btnSetAttendanceDay"
-                android:layout_width="0dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="Set Attendance" />
-
-            <Button
-                android:id="@+id/btnManageAttendance"
-                android:layout_width="0dp"
-                android:layout_columnSpan="2"
-                android:layout_columnWeight="1"
-                android:layout_margin="6dp"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
-                android:text="View Attendance Records" />
-
-        </GridLayout>
-            
-        <Button
-            android:id="@+id/btnRegisterSuperAdmin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Register Super Admin" />
-
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Sign Out"
-            android:backgroundTint="@color/accent"/>
+        <Button android:id="@+id/btnManageAttendance" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="View All Attendance Records" />
+        <Button android:id="@+id/btnViewAbsences" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="View Students with 2+ Absences" />
+        
+        <Button android:id="@+id/btnRegisterSuperAdmin" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Register Super Admin" />
+        <Button android:id="@+id/btnLogout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Sign Out" android:backgroundTint="@color/accent"/>
 
     </LinearLayout>
 </ScrollView>
