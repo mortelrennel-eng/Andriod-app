@@ -3,6 +3,7 @@ package com.example.finalproject;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,9 +15,11 @@ public class SectionedAttendanceAdapter extends RecyclerView.Adapter<RecyclerVie
     private static final int TYPE_ITEM = 1;
 
     private List<Object> itemList;
+    private ManageAttendanceActivity activity;
 
-    public SectionedAttendanceAdapter(List<Object> itemList) {
+    public SectionedAttendanceAdapter(List<Object> itemList, ManageAttendanceActivity activity) {
         this.itemList = itemList;
+        this.activity = activity;
     }
 
     @Override
@@ -52,6 +55,10 @@ public class SectionedAttendanceAdapter extends RecyclerView.Adapter<RecyclerVie
             itemHolder.tvStudentName.setText(record.studentName);
             itemHolder.tvStatus.setText(record.status);
             itemHolder.tvDate.setText(record.date + " - " + record.sessionTitle);
+
+            // --- THIS IS THE FIX: Always show the Edit button for Super Admin ---
+            itemHolder.btnEdit.setVisibility(View.VISIBLE);
+            itemHolder.btnEdit.setOnClickListener(v -> activity.editAttendance(record));
         }
     }
 
@@ -60,7 +67,6 @@ public class SectionedAttendanceAdapter extends RecyclerView.Adapter<RecyclerVie
         return itemList.size();
     }
 
-    // ViewHolder for Section Headers
     public static class HeaderViewHolder extends RecyclerView.ViewHolder {
         TextView tvSectionHeader;
         public HeaderViewHolder(@NonNull View itemView) {
@@ -69,14 +75,16 @@ public class SectionedAttendanceAdapter extends RecyclerView.Adapter<RecyclerVie
         }
     }
 
-    // ViewHolder for Attendance Items
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView tvStudentName, tvStatus, tvDate;
+        Button btnEdit;
+
         public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             tvStudentName = itemView.findViewById(R.id.tvStudentName);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvDate = itemView.findViewById(R.id.tvDate);
+            btnEdit = itemView.findViewById(R.id.btnEditAttendance);
         }
     }
 }

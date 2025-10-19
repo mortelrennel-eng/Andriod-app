@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
@@ -20,12 +21,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// This is the definitive SUPER ADMIN view for all attendance records.
 public class ManageAttendanceActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private SectionedAttendanceAdapter adapter;
-    private List<Object> itemList; // This will hold SectionHeaders and AdminAttendanceRecords
-    private List<Object> fullItemList; // For filtering
+    private List<Object> itemList; 
+    private List<Object> fullItemList; 
     private SearchView searchView;
     private DatabaseReference rootRef;
 
@@ -39,13 +41,14 @@ public class ManageAttendanceActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("All Attendance Records");
 
         recyclerView = findViewById(R.id.attendanceRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         itemList = new ArrayList<>();
         fullItemList = new ArrayList<>();
-        adapter = new SectionedAttendanceAdapter(itemList);
+        adapter = new SectionedAttendanceAdapter(itemList, this);
         recyclerView.setAdapter(adapter);
 
         searchView = findViewById(R.id.searchView);
@@ -74,16 +77,20 @@ public class ManageAttendanceActivity extends AppCompatActivity {
         } else {
             text = text.toLowerCase();
             SectionHeader currentHeader = null;
+            boolean headerAdded = false;
             for (Object item : fullItemList) {
                 if (item instanceof SectionHeader) {
                     currentHeader = (SectionHeader) item;
+                    headerAdded = false;
                 } else if (item instanceof AdminAttendanceRecord) {
                     AdminAttendanceRecord record = (AdminAttendanceRecord) item;
-                    boolean matches = record.studentName.toLowerCase().contains(text) || 
+                    boolean matches = record.studentName.toLowerCase().contains(text) ||
+                                      (currentHeader != null && currentHeader.getTitle().toLowerCase().contains(text)) ||
                                       record.status.toLowerCase().contains(text);
                     if (matches) {
-                        if (currentHeader != null && !itemList.contains(currentHeader)) {
+                        if (currentHeader != null && !headerAdded) {
                             itemList.add(currentHeader);
+                            headerAdded = true;
                         }
                         itemList.add(record);
                     }
@@ -94,7 +101,6 @@ public class ManageAttendanceActivity extends AppCompatActivity {
     }
 
     private void loadAllData() {
-        // This is a complex, multi-step data loading process
         rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -103,9 +109,8 @@ public class ManageAttendanceActivity extends AppCompatActivity {
                 DataSnapshot attendanceSnap = snapshot.child("attendance_by_day");
 
                 Map<String, List<AdminAttendanceRecord>> sectionRecords = new HashMap<>();
-
-                // 1. Prepare student map {studentUid -> {sectionName, studentName}}
                 Map<String, Map<String, String>> studentInfo = new HashMap<>();
+
                 for(DataSnapshot user : usersSnap.getChildren()) {
                     if("student".equals(user.child("role").getValue(String.class))) {
                         String section = user.child("section").getValue(String.class);
@@ -118,7 +123,6 @@ public class ManageAttendanceActivity extends AppCompatActivity {
                     }
                 }
 
-                // 2. Iterate through all attendance records
                 for (DataSnapshot day : attendanceSnap.getChildren()) {
                     for (DataSnapshot session : day.getChildren()) {
                         for (DataSnapshot record : session.getChildren()) {
@@ -128,7 +132,6 @@ public class ManageAttendanceActivity extends AppCompatActivity {
                                 String sectionName = info.get("section");
                                 String studentName = info.get("name");
                                 String status = record.child("status").getValue(String.class);
-
                                 AdminAttendanceRecord newRecord = new AdminAttendanceRecord(studentUid, studentName, status, day.getKey(), session.getKey());
                                 
                                 if (!sectionRecords.containsKey(sectionName)) {
@@ -140,16 +143,17 @@ public class ManageAttendanceActivity extends AppCompatActivity {
                     }
                 }
 
-                // 3. Build the final display list
                 fullItemList.clear();
                 for (DataSnapshot section : sectionsSnap.getChildren()) {
                     String sectionName = section.getKey();
                     String adminName = section.child("managedBy").getValue(String.class);
                     
-                    fullItemList.add(new SectionHeader(sectionName + " (Admin: " + adminName + ")"));
+                    fullItemList.add(new SectionHeader(sectionName + " (Admin: " + (adminName != null ? adminName : "N/A") + ")"));
                     
                     if (sectionRecords.containsKey(sectionName)) {
-                        fullItemList.addAll(sectionRecords.get(sectionName));
+                        List<AdminAttendanceRecord> records = sectionRecords.get(sectionName);
+                        Collections.reverse(records); // show most recent first for each section
+                        fullItemList.addAll(records);
                     }
                 }
                 
@@ -161,6 +165,26 @@ public class ManageAttendanceActivity extends AppCompatActivity {
                 Toast.makeText(ManageAttendanceActivity.this, "Failed to load data.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    public void editAttendance(AdminAttendanceRecord record) {
+        final String[] statuses = {"On-Time", "Late", "Absent"};
+        new AlertDialog.Builder(this)
+            .setTitle("Update Status for " + record.studentName)
+            .setItems(statuses, (dialog, which) -> {
+                String newStatus = statuses[which];
+                DatabaseReference recordRef = rootRef.child("attendance_by_day").child(record.date).child(record.sessionTitle).child(record.studentUid).child("status");
+                
+                recordRef.setValue(newStatus).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(this, "Status updated to " + newStatus, Toast.LENGTH_SHORT).show();
+                        loadAllData(); // Refresh the entire list
+                    } else {
+                        Toast.makeText(this, "Failed to update status.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            })
+            .show();
     }
 
     @Override

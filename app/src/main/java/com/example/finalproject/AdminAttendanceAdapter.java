@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
+// This adapter is for the regular Admin view. It will NOT show the Edit button.
 public class AdminAttendanceAdapter extends RecyclerView.Adapter<AdminAttendanceAdapter.ViewHolder> {
 
     private ArrayList<AdminAttendanceRecord> recordList;
@@ -27,8 +28,10 @@ public class AdminAttendanceAdapter extends RecyclerView.Adapter<AdminAttendance
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AdminAttendanceRecord record = recordList.get(position);
         holder.tvStudentName.setText(record.studentName);
-        holder.tvStatus.setText(record.status);
+        holder.tvStatus.setText("Status: " + record.status);
         holder.tvDate.setText(record.date + " - " + record.sessionTitle);
+        
+        // The button's visibility is not touched, so it respects the 'gone' default from XML.
     }
 
     @Override
@@ -36,6 +39,7 @@ public class AdminAttendanceAdapter extends RecyclerView.Adapter<AdminAttendance
         return recordList.size();
     }
 
+    // *** THIS IS THE FIX: The ViewHolder for the Admin does NOT have a reference to the Button. ***
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvStudentName, tvStatus, tvDate;
 
@@ -44,6 +48,7 @@ public class AdminAttendanceAdapter extends RecyclerView.Adapter<AdminAttendance
             tvStudentName = itemView.findViewById(R.id.tvStudentName);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvDate = itemView.findViewById(R.id.tvDate);
+            // The Button 'btnEditAttendance' is not looked for here, so it can never be accessed.
         }
     }
 }

@@ -44,7 +44,8 @@
         <activity android:name=".EbookManagerActivity" />
         <activity android:name=".ViewAdminsActivity" />
         <activity android:name=".QRGeneratorActivity" />
-        <activity android:name=".ManageAttendanceActivity" />
+        <activity android:name=".ManageAttendanceActivity" /> <!-- Super Admin's View -->
+        <activity android:name=".AdminViewAttendanceActivity" /> <!-- NEW: Admin's View -->
         <activity android:name=".CreateAnnouncementActivity" />
         <activity android:name=".ManageAdminsActivity" />
         <activity android:name=".SectionAttendanceActivity" />
@@ -56,7 +57,7 @@
         <activity android:name=".EditStudentActivity" />
         <activity android:name=".StudentListForAttendanceActivity" />
         <activity android:name=".AttendanceHistoryForStudentActivity" /> 
-        <activity android:name=".ViewMySectionActivity" /> <!-- NEW -->
+        <activity android:name=".ViewMySectionActivity" /> 
 
         <!-- ✅ Student Features -->
         <activity android:name=".StudentDashboard" />
