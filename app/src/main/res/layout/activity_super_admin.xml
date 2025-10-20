@@ -28,39 +28,38 @@
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
             android:layout_marginBottom="16dp">
-            <LinearLayout
+            <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:columnCount="3"
                 android:padding="16dp">
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-                    <TextView android:id="@+id/tvTotalSections" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/primary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sections"/>
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center">
                     <TextView android:id="@+id/tvTotalStudents" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/primary"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Students"/>
                 </LinearLayout>
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tvTotalMale" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="#1976D2"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Male"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tvTotalFemale" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="#E91E63"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Female"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_marginTop="16dp" android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tvTotalSections" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/primary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sections"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_marginTop="16dp" android:orientation="vertical" android:gravity="center">
                     <TextView android:id="@+id/tvFrequentAbsentees" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/red"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Absentees"/>
                 </LinearLayout>
-            </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_marginTop="16dp" android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tvTotalEbooks" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="28sp" android:textStyle="bold" android:textColor="#4CAF50"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="E-books"/>
+                </LinearLayout>
+
+            </GridLayout>
         </androidx.cardview.widget.CardView>
         
         <TextView

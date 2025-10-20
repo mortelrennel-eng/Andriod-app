@@ -29,7 +29,7 @@ public class SuperAdminDashboard extends AppCompatActivity {
     private static final String TAG = "SuperAdminDashboard";
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
-    private TextView tvTotalSections, tvTotalStudents, tvFrequentAbsentees;
+    private TextView tvTotalStudents, tvTotalMale, tvTotalFemale, tvTotalSections, tvFrequentAbsentees, tvTotalEbooks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +39,12 @@ public class SuperAdminDashboard extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference();
 
-        tvTotalSections = findViewById(R.id.tvTotalSections);
         tvTotalStudents = findViewById(R.id.tvTotalStudents);
+        tvTotalMale = findViewById(R.id.tvTotalMale);
+        tvTotalFemale = findViewById(R.id.tvTotalFemale);
+        tvTotalSections = findViewById(R.id.tvTotalSections);
         tvFrequentAbsentees = findViewById(R.id.tvFrequentAbsentees);
+        tvTotalEbooks = findViewById(R.id.tvTotalEbooks);
 
         findViewById(R.id.btnRegisterSuperAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterSuperAdminActivity.class)));
         findViewById(R.id.btnRegisterAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterAdminActivity.class)));
@@ -67,44 +70,42 @@ public class SuperAdminDashboard extends AppCompatActivity {
     }
 
     private void loadDashboardStats() {
-        rootRef.child("sections").addValueEventListener(new ValueEventListener() {
+        rootRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(tvTotalSections != null) tvTotalSections.setText(String.valueOf(snapshot.getChildrenCount()));
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) { }
-        });
+                if (snapshot.hasChild("sections")) {
+                    if(tvTotalSections != null) tvTotalSections.setText(String.valueOf(snapshot.child("sections").getChildrenCount()));
+                }
+                if (snapshot.hasChild("ebooks")) {
+                    if(tvTotalEbooks != null) tvTotalEbooks.setText(String.valueOf(snapshot.child("ebooks").getChildrenCount()));
+                }
+                DataSnapshot usersSnap = snapshot.child("users");
+                long totalStudents = 0; int maleCount = 0; int femaleCount = 0;
+                for (DataSnapshot userSnapshot : usersSnap.getChildren()) {
+                    if ("student".equals(userSnapshot.child("role").getValue(String.class))) {
+                        totalStudents++;
+                        if ("Male".equalsIgnoreCase(userSnapshot.child("gender").getValue(String.class))) maleCount++;
+                        else if ("Female".equalsIgnoreCase(userSnapshot.child("gender").getValue(String.class))) femaleCount++;
+                    }
+                }
+                if(tvTotalStudents != null) tvTotalStudents.setText(String.valueOf(totalStudents));
+                if(tvTotalMale != null) tvTotalMale.setText(String.valueOf(maleCount));
+                if(tvTotalFemale != null) tvTotalFemale.setText(String.valueOf(femaleCount));
 
-        rootRef.child("users").orderByChild("role").equalTo("student").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(tvTotalStudents != null) tvTotalStudents.setText(String.valueOf(snapshot.getChildrenCount()));
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) { }
-        });
-
-        rootRef.child("attendance_by_day").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                DataSnapshot attendanceSnap = snapshot.child("attendance_by_day");
                 Map<String, Integer> absenceCount = new HashMap<>();
-                for (DataSnapshot day : snapshot.getChildren()) {
+                for (DataSnapshot day : attendanceSnap.getChildren()) {
                     for (DataSnapshot session : day.getChildren()) {
                         for (DataSnapshot record : session.getChildren()) {
-                            String studentUid = record.getKey();
-                            String status = record.child("status").getValue(String.class);
-                            if ("Absent".equalsIgnoreCase(status)) {
-                                absenceCount.put(studentUid, absenceCount.getOrDefault(studentUid, 0) + 1);
+                            if ("Absent".equalsIgnoreCase(record.child("status").getValue(String.class))) {
+                                absenceCount.put(record.getKey(), absenceCount.getOrDefault(record.getKey(), 0) + 1);
                             }
                         }
                     }
                 }
                 int frequentAbsentees = 0;
                 for (int count : absenceCount.values()) {
-                    if (count >= 2) {
-                        frequentAbsentees++;
-                    }
+                    if (count >= 2) frequentAbsentees++;
                 }
                 if(tvFrequentAbsentees != null) tvFrequentAbsentees.setText(String.valueOf(frequentAbsentees));
             }
@@ -117,10 +118,8 @@ public class SuperAdminDashboard extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_set_attendance, null);
         builder.setView(dialogView);
-
         final EditText edtTitle = dialogView.findViewById(R.id.edtAttendanceTitle);
         final EditText edtLateTime = dialogView.findViewById(R.id.edtLateTime);
-
         builder.setPositiveButton("Set", (dialog, which) -> {
             String title = edtTitle.getText().toString().trim();
             String lateTime = edtLateTime.getText().toString().trim();
@@ -136,14 +135,12 @@ public class SuperAdminDashboard extends AppCompatActivity {
 
     private void markPreviousAbsenteesAndSetNewDay(final String newTitle, final String newLateTime) {
         DatabaseReference attendanceDayRef = rootRef.child("attendanceDay");
-
         attendanceDayRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     String previousTitle = snapshot.child("title").getValue(String.class);
                     String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
                     if (previousTitle != null && !previousTitle.isEmpty()) {
                         DatabaseReference previousRecordsRef = rootRef.child("attendance_by_day").child(today).child(previousTitle);
                         previousRecordsRef.orderByChild("time_out").equalTo(null).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -166,7 +163,6 @@ public class SuperAdminDashboard extends AppCompatActivity {
                     setNewAttendanceDay(newTitle, newLateTime);
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 setNewAttendanceDay(newTitle, newLateTime);
@@ -178,7 +174,6 @@ public class SuperAdminDashboard extends AppCompatActivity {
         Map<String, Object> attendanceData = new HashMap<>();
         attendanceData.put("title", title);
         attendanceData.put("lateTime", lateTime);
-
         rootRef.child("attendanceDay").setValue(attendanceData)
             .addOnSuccessListener(aVoid -> Toast.makeText(SuperAdminDashboard.this, "New attendance day set!", Toast.LENGTH_LONG).show())
             .addOnFailureListener(e -> Toast.makeText(SuperAdminDashboard.this, "Failed to set new attendance day.", Toast.LENGTH_SHORT).show());
