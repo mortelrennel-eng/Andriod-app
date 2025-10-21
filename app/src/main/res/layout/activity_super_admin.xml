@@ -80,22 +80,25 @@
             <Button android:id="@+id/btnManageStudents" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Manage Students" />
             <Button android:id="@+id/btnViewAllUsers" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="View All Users" />
             <Button android:id="@+id/btnManageSections" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Manage Sections" />
-            <Button android:id="@+id/btnSetAttendanceDay" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Set Attendance" />
             <Button android:id="@+id/btnAddEbook" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Add E-Book" />
             <Button android:id="@+id/btnManageEbooks" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Manage E-Books" />
+            
+            <!-- THIS IS THE FIX: The missing button -->
+            <Button android:id="@+id/btnPostAnnouncement" android:layout_width="0dp" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Post Announcement" />
+
         </GridLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Attendance Monitoring"
+            android:text="Attendance &amp; System"
             android:textStyle="bold"
             android:layout_marginTop="16dp"
             android:textColor="@color/primary"/>
 
+        <Button android:id="@+id/btnSetAttendanceDay" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="Set Attendance Session" />
         <Button android:id="@+id/btnManageAttendance" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="View All Attendance Records" />
         <Button android:id="@+id/btnViewAbsences" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/button_primary" android:textColor="@color/white" android:text="View Students with 2+ Absences" />
-        
         <Button android:id="@+id/btnRegisterSuperAdmin" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Register Super Admin" />
         <Button android:id="@+id/btnLogout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Sign Out" android:backgroundTint="@color/accent"/>
 

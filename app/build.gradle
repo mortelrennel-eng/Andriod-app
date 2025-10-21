@@ -41,7 +41,11 @@ dependencies {
     implementation 'com.google.firebase:firebase-database'
     implementation libs.firebase.messaging
 
-    // QR Code Generation and Scanning (using a single, reliable library)
+    // --- THIS IS THE FIX ---
+    // QR Code Scanner library
+    implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
+
+    // QR Code Generation (already present, but good to keep)
     implementation 'com.google.zxing:core:3.5.3'
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 

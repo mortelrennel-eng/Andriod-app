@@ -5,18 +5,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ManageStudentsActivity">
+    tools:context=".superadmin.ManageStudentsActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:titleTextColor="@android:color/white" />
+        android:background="@color/primary"
+        app:title="Manage Students"
+        app:titleTextColor="@color/white" />
 
-    <ListView
-        android:id="@+id/sectionsListView"
+    <!-- THIS IS THE FIX: The missing RecyclerView with the correct ID -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvStudents"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:padding="8dp" />
 
 </LinearLayout>

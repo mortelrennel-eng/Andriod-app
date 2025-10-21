@@ -5,14 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".EditStudentActivity">
+    tools:context=".superadmin.EditStudentActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:titleTextColor="@android:color/white" />
+        android:background="@color/primary"
+        app:title="Edit Student"
+        app:titleTextColor="@color/white" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -45,25 +46,11 @@
                 android:hint="Student ID" />
 
             <EditText
-                android:id="@+id/edtContactNumber"
+                android:id="@+id/edtSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:hint="Contact Number" />
-
-             <EditText
-                android:id="@+id/edtParentName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="Parent Name" />
-
-             <EditText
-                android:id="@+id/edtParentContactNumber"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="Parent Contact" />
+                android:hint="Section" />
 
             <Button
                 android:id="@+id/btnSaveChanges"
@@ -71,6 +58,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Save Changes" />
+
+            <!-- THIS IS THE FIX: The missing Button -->
+            <Button
+                android:id="@+id/btnRemoveFromSection"
+                style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Remove From Section"
+                android:textColor="@color/red" />
 
         </LinearLayout>
     </ScrollView>

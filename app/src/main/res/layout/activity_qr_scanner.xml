@@ -1,38 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".admin.QRScannerActivity">
 
-    <!-- The scanner view is now inside a CardView with margins -->
-    <androidx.cardview.widget.CardView
+    <!-- THIS IS THE FIX: The missing CodeScannerView with the correct ID -->
+    <com.budiyev.android.codescanner.CodeScannerView
+        android:id="@+id/scanner_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="32dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp">
+        app:autoFocusButtonColor="@android:color/white"
+        app:autoFocusButtonVisible="true"
+        app:flashButtonColor="@android:color/white"
+        app:flashButtonVisible="true"
+        app:frameAspectRatioHeight="1"
+        app:frameAspectRatioWidth="1"
+        app:frameColor="@android:color/white"
+        app:frameCornersRadius="0dp"
+        app:frameCornersSize="50dp"
+        app:frameSize="0.75"
+        app:frameThickness="2dp"
+        app:maskColor="#77000000" />
 
-        <com.journeyapps.barcodescanner.DecoratedBarcodeView
-            android:id="@+id/zxing_barcode_scanner"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:zxing_viewfinder_laser="@android:color/white"
-            app:zxing_viewfinder_mask="#99000000" />
-
-    </androidx.cardview.widget.CardView>
-
-    <!-- Title with emoticons -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="80dp"
-        android:background="#80000000"
-        android:padding="12dp"
-        android:text="📷 Scan Student's QR Code 📷"
-        android:textColor="@android:color/white"
-        android:textSize="22sp"
-        android:textStyle="bold" />
-
-</RelativeLayout>
+</FrameLayout>

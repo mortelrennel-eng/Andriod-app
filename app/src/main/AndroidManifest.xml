@@ -2,12 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ✅ Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-    <!-- ✅ Feature requirement -->
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
 
     <application
@@ -21,69 +18,53 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
 
-        <!-- ✅ Launcher Activity -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- ✅ Admin & Super Admin Features -->
-        <activity android:name=".AdminDashboard" />
-        <activity android:name=".SuperAdminDashboard" />
-        <activity android:name=".RegisterAdminActivity" />
-        <activity android:name=".RegisterSuperAdminActivity" />
-        <activity android:name=".AdminRegistrationCompleteActivity" />
-        <activity android:name=".UsersListActivity" />
-        <activity android:name=".ManageStudentsActivity" />
-        <activity android:name=".ManageSectionsActivity" />
-        <activity android:name=".AddEbookActivity" />
-        <activity android:name=".EbookManagerActivity" />
-        <activity android:name=".ViewAdminsActivity" />
-        <activity android:name=".QRGeneratorActivity" />
-        <activity android:name=".ManageAttendanceActivity" /> 
-        <activity android:name=".AdminViewAttendanceActivity" />
-        <activity android:name=".AbsenteesListActivity" /> <!-- NEW -->
-        <activity android:name=".CreateAnnouncementActivity" />
-        <activity android:name=".ManageAdminsActivity" />
-        <activity android:name=".SectionAttendanceActivity" />
-        <activity android:name=".AddStudentsToSectionActivity" />
-        <activity android:name=".ViewStudentsInSectionActivity" />
-        <activity android:name=".ViewAttendanceActivity" />
-        <activity android:name=".StudentListBySectionActivity" />
-        <activity android:name=".AttendanceListBySectionActivity" />
-        <activity android:name=".EditStudentActivity" />
-        <activity android:name=".StudentListForAttendanceActivity" />
-        <activity android:name=".AttendanceHistoryForStudentActivity" /> 
-        <activity android:name=".ViewMySectionActivity" /> 
+        <!-- Super Admin Activities -->
+        <activity android:name=".superadmin.SuperAdminDashboard" />
+        <activity android:name=".superadmin.RegisterSuperAdminActivity" />
+        <activity android:name=".superadmin.ManageAdminsActivity" />
+        <activity android:name=".superadmin.UsersListActivity" />
+        <activity android:name=".superadmin.AddEbookActivity" />
+        <activity android:name=".superadmin.EbookManagerActivity" />
+        <activity android:name=".superadmin.ManageStudentsActivity" />
+        <activity android:name=".superadmin.ManageAttendanceActivity" />
+        <activity android:name=".superadmin.ManageSectionsActivity" />
+        <activity android:name=".superadmin.AbsenteesListActivity" />
+        <activity android:name=".superadmin.AddStudentsToSectionActivity" />
+        <activity android:name=".superadmin.ViewStudentsInSectionActivity" />
+        <activity android:name=".superadmin.EditStudentActivity" />
+        <activity android:name=".superadmin.AttendanceHistoryForStudentActivity" />
+        <activity android:name=".superadmin.StudentListBySectionActivity" />
+        <activity android:name=".superadmin.StudentListForAttendanceActivity" />
+        <activity android:name=".superadmin.SuperAdminLoginActivity" />
 
-        <!-- ✅ Student Features -->
-        <activity android:name=".StudentDashboard" />
-        <activity android:name=".StudentRegisterActivity" />
-        <activity android:name=".AttendanceHistoryActivity" />
-        <activity android:name=".EbookListActivity" />
-        <activity android:name=".SavedEbooksActivity" />
-        <activity android:name=".EditStudentProfileActivity" />
-        <activity android:name=".ViewAnnouncementsActivity" />
+        <!-- Admin Activities -->
+        <activity android:name=".admin.AdminDashboard" />
+        <activity android:name=".admin.RegisterAdminActivity" />
+        <activity android:name=".admin.AdminLoginActivity" />
+        <activity android:name=".admin.QRScannerActivity" />
+        <activity android:name=".admin.CreateAnnouncementActivity" />
+        <activity android:name=".admin.AdminRegistrationCompleteActivity" />
+        <activity android:name=".admin.AdminViewAttendanceActivity" />
+        <activity android:name=".admin.ViewMySectionActivity" />
+        
+        <!-- Student Activities -->
+        <activity android:name=".student.StudentDashboard" />
+        <activity android:name=".student.RegisterStudentActivity" />
+        <activity android:name=".student.StudentLoginActivity" />
+        <activity android:name=".student.EditStudentProfileActivity" />
+        <activity android:name=".student.ViewAnnouncementsActivity" />
+        <activity android:name=".student.AttendanceHistoryActivity" />
+        <activity android:name=".student.EbookListActivity" />
+        <activity android:name=".student.SavedEbooksActivity" />
 
-        <!-- ✅ Login Pages -->
-        <activity android:name=".AdminLoginActivity" />
-        <activity android:name=".SuperAdminLoginActivity" />
-        <activity android:name=".StudentLoginActivity" />
-
-        <!-- ✅ Utility Activities -->
-        <activity 
-            android:name=".QRScannerActivity" 
-            android:screenOrientation="portrait"
-            tools:replace="screenOrientation"/>
-
-        <!-- ✅ Firebase Messaging Service -->
-        <service
-            android:name=".MyFirebaseMessagingService"
-            android:exported="false">
+        <service android:name=".MyFirebaseMessagingService" android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
