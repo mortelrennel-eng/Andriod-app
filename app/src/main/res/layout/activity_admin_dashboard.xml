@@ -1,69 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
     android:background="@color/background"
-    android:fillViewport="true">
+    android:padding="16dp"
+    tools:context=".admin.AdminDashboard">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/tvAdminWelcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome, Admin"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- THIS IS THE NEW STATS PANEL -->
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:id="@+id/tvAdminWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="Admin Dashboard"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="24dp" />
-
-        <Button
-            android:id="@+id/btnScanQr"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        android:layout_marginBottom="24dp">
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/button_primary"
-            android:textColor="@color/white"
-            android:minHeight="60dp"
-            android:text="Scan QR for Attendance" />
+            android:orientation="horizontal"
+            android:padding="16dp">
 
-        <Button
-            android:id="@+id/btnViewAttendance"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/button_primary"
-            android:textColor="@color/white"
-            android:minHeight="60dp"
-            android:text="View Section Attendance" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:id="@+id/tvTotalStudentsInSection"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="My Students"/>
+            </LinearLayout>
 
-         <Button
-            android:id="@+id/btnViewMySection"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:background="@drawable/button_primary"
-            android:textColor="@color/white"
-            android:minHeight="60dp"
-            android:text="View My Section Students" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:id="@+id/tvFrequentAbsenteesInSection"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/red"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Absentees"/>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+    <Button
+        android:id="@+id/btnScanQr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scan QR for Attendance" />
 
-        <Button
-            android:id="@+id/btnAdminSignOut"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sign Out"
-            android:backgroundTint="@color/accent"/>
+    <Button
+        android:id="@+id/btnViewAttendance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="View Section Attendance" />
 
-    </LinearLayout>
-</ScrollView>
+    <Button
+        android:id="@+id/btnViewMySection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="View My Section" />
+
+    <Button
+        android:id="@+id/btnAdminSignOut"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Sign Out"
+        android:backgroundTint="@color/accent"/>
+
+</LinearLayout>
