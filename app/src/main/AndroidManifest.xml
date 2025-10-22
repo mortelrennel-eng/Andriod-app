@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
 
     <application
@@ -43,13 +45,13 @@
         <activity android:name=".superadmin.StudentListBySectionActivity" />
         <activity android:name=".superadmin.StudentListForAttendanceActivity" />
         <activity android:name=".superadmin.SuperAdminLoginActivity" />
+        <activity android:name=".superadmin.ManageAnnouncementsActivity" /> <!-- NEW -->
 
         <!-- Admin Activities -->
         <activity android:name=".admin.AdminDashboard" />
         <activity android:name=".admin.RegisterAdminActivity" />
         <activity android:name=".admin.AdminLoginActivity" />
-        <activity android:name=".admin.QRScannerActivity" />
-        <activity android:name=".admin.CreateAnnouncementActivity" />
+        <activity android:name=".admin.QRScannerActivity" tools:replace="android:screenOrientation" android:screenOrientation="portrait"/>
         <activity android:name=".admin.AdminRegistrationCompleteActivity" />
         <activity android:name=".admin.AdminViewAttendanceActivity" />
         <activity android:name=".admin.ViewMySectionActivity" />

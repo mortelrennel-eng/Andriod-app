@@ -1,16 +1,29 @@
 package com.example.finalproject.model;
 
 public class Announcement {
+    private String id;
     private String title;
     private String content;
     private long timestamp;
 
+    // Required empty constructor for Firebase
     public Announcement() {}
 
-    public Announcement(String title, String content, long timestamp) {
+    // --- THIS IS THE FIX: The constructor now includes the ID ---
+    public Announcement(String id, String title, String content, long timestamp) {
+        this.id = id;
         this.title = title;
         this.content = content;
         this.timestamp = timestamp;
+    }
+
+    // --- AND THE FIX: Getters and Setters for the ID ---
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getTitle() { return title; }

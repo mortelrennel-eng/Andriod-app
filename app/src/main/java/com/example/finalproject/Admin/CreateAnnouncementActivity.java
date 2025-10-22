@@ -56,7 +56,10 @@ public class CreateAnnouncementActivity extends AppCompatActivity {
         String announcementId = announcementsRef.push().getKey();
         if (announcementId != null) {
             long timestamp = new Date().getTime();
-            Announcement announcement = new Announcement(title, content, timestamp);
+
+            // --- THIS IS THE FIX: Passing the ID to the constructor ---
+            Announcement announcement = new Announcement(announcementId, title, content, timestamp);
+
             announcementsRef.child(announcementId).setValue(announcement)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(CreateAnnouncementActivity.this, "Announcement posted.", Toast.LENGTH_SHORT).show();

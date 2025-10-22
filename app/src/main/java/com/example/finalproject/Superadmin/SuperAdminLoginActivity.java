@@ -18,6 +18,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.finalproject.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -101,16 +103,24 @@ public class SuperAdminLoginActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
 
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
+            progressBar.setVisibility(View.GONE);
             if (task.isSuccessful()) {
                 FirebaseUser firebaseUser = mAuth.getCurrentUser();
                 if (firebaseUser != null) {
                     checkRoleAndProceed(firebaseUser.getUid());
-                } else {
-                    progressBar.setVisibility(View.GONE);
                 }
             } else {
-                progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, "Authentication Failed.", Toast.LENGTH_SHORT).show();
+                String errorMessage = "Authentication Failed.";
+                try {
+                    throw task.getException();
+                } catch (FirebaseAuthInvalidUserException e) {
+                    errorMessage = "No account found with this email.";
+                } catch (FirebaseAuthInvalidCredentialsException e) {
+                    errorMessage = "Incorrect password. Please try again.";
+                } catch (Exception e) {
+                    errorMessage = e.getMessage();
+                }
+                Toast.makeText(SuperAdminLoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -119,11 +129,8 @@ public class SuperAdminLoginActivity extends AppCompatActivity {
         usersRef.child(uid).child("role").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                progressBar.setVisibility(View.GONE);
                 String role = snapshot.getValue(String.class);
-                
                 if ("superadmin".equals(role)) {
-                    Toast.makeText(SuperAdminLoginActivity.this, "Super Admin Login Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(SuperAdminLoginActivity.this, SuperAdminDashboard.class));
                     finish();
                 } else {
@@ -134,7 +141,6 @@ public class SuperAdminLoginActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                progressBar.setVisibility(View.GONE);
                 Toast.makeText(SuperAdminLoginActivity.this, "Database error. Please try again.", Toast.LENGTH_SHORT).show();
                 mAuth.signOut();
             }

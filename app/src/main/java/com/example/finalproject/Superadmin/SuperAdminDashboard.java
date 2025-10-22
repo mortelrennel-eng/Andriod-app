@@ -3,7 +3,6 @@ package com.example.finalproject.superadmin;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -15,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.finalproject.MainActivity;
 import com.example.finalproject.R;
-import com.example.finalproject.admin.CreateAnnouncementActivity;
 import com.example.finalproject.admin.RegisterAdminActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -31,7 +29,6 @@ import java.util.Map;
 
 public class SuperAdminDashboard extends AppCompatActivity {
 
-    private static final String TAG = "SuperAdminDashboard";
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
     private TextView tvTotalStudents, tvTotalMale, tvTotalFemale, tvTotalSections, tvFrequentAbsentees, tvTotalEbooks;
@@ -51,7 +48,6 @@ public class SuperAdminDashboard extends AppCompatActivity {
         tvFrequentAbsentees = findViewById(R.id.tvFrequentAbsentees);
         tvTotalEbooks = findViewById(R.id.tvTotalEbooks);
 
-        findViewById(R.id.btnRegisterSuperAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterSuperAdminActivity.class)));
         findViewById(R.id.btnRegisterAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterAdminActivity.class)));
         findViewById(R.id.btnManageAdmins).setOnClickListener(v -> startActivity(new Intent(this, ManageAdminsActivity.class)));
         findViewById(R.id.btnViewAllUsers).setOnClickListener(v -> startActivity(new Intent(this, UsersListActivity.class)));
@@ -61,11 +57,9 @@ public class SuperAdminDashboard extends AppCompatActivity {
         findViewById(R.id.btnManageAttendance).setOnClickListener(v -> startActivity(new Intent(this, ManageAttendanceActivity.class)));
         findViewById(R.id.btnManageSections).setOnClickListener(v -> startActivity(new Intent(this, ManageSectionsActivity.class)));
         findViewById(R.id.btnViewAbsences).setOnClickListener(v -> startActivity(new Intent(this, AbsenteesListActivity.class)));
+        findViewById(R.id.btnPostAnnouncement).setOnClickListener(v -> startActivity(new Intent(this, ManageAnnouncementsActivity.class)));
         findViewById(R.id.btnSetAttendanceDay).setOnClickListener(v -> showSetAttendanceDayDialog());
         
-        // --- THIS IS THE FIX: Connecting the new button ---
-        findViewById(R.id.btnPostAnnouncement).setOnClickListener(v -> startActivity(new Intent(this, CreateAnnouncementActivity.class)));
-
         findViewById(R.id.btnLogout).setOnClickListener(v -> {
             mAuth.signOut();
             Intent intent = new Intent(this, MainActivity.class);
@@ -77,16 +71,17 @@ public class SuperAdminDashboard extends AppCompatActivity {
         loadDashboardStats();
     }
 
+    // --- THIS IS THE FIX: The complete and correct method to load all stats ---
     private void loadDashboardStats() {
         rootRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.hasChild("sections")) {
-                    if(tvTotalSections != null) tvTotalSections.setText(String.valueOf(snapshot.child("sections").getChildrenCount()));
-                }
-                if (snapshot.hasChild("ebooks")) {
-                    if(tvTotalEbooks != null) tvTotalEbooks.setText(String.valueOf(snapshot.child("ebooks").getChildrenCount()));
-                }
+                long sectionsCount = snapshot.child("sections").getChildrenCount();
+                tvTotalSections.setText(String.valueOf(sectionsCount));
+
+                long ebooksCount = snapshot.child("ebooks").getChildrenCount();
+                tvTotalEbooks.setText(String.valueOf(ebooksCount));
+
                 DataSnapshot usersSnap = snapshot.child("users");
                 long totalStudents = 0; int maleCount = 0; int femaleCount = 0;
                 for (DataSnapshot userSnapshot : usersSnap.getChildren()) {
@@ -96,9 +91,9 @@ public class SuperAdminDashboard extends AppCompatActivity {
                         else if ("Female".equalsIgnoreCase(userSnapshot.child("gender").getValue(String.class))) femaleCount++;
                     }
                 }
-                if(tvTotalStudents != null) tvTotalStudents.setText(String.valueOf(totalStudents));
-                if(tvTotalMale != null) tvTotalMale.setText(String.valueOf(maleCount));
-                if(tvTotalFemale != null) tvTotalFemale.setText(String.valueOf(femaleCount));
+                tvTotalStudents.setText(String.valueOf(totalStudents));
+                tvTotalMale.setText(String.valueOf(maleCount));
+                tvTotalFemale.setText(String.valueOf(femaleCount));
 
                 DataSnapshot attendanceSnap = snapshot.child("attendance_by_day");
                 Map<String, Integer> absenceCount = new HashMap<>();
@@ -115,37 +110,66 @@ public class SuperAdminDashboard extends AppCompatActivity {
                 for (int count : absenceCount.values()) {
                     if (count >= 2) frequentAbsentees++;
                 }
-                if(tvFrequentAbsentees != null) tvFrequentAbsentees.setText(String.valueOf(frequentAbsentees));
+                tvFrequentAbsentees.setText(String.valueOf(frequentAbsentees));
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { Toast.makeText(SuperAdminDashboard.this, "Failed to load dashboard stats.", Toast.LENGTH_SHORT).show(); }
+        });
+    }
+
+    // --- AND THE FIX: All other methods restored ---
+    private void showSetAttendanceDayDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_set_attendance, null);
+        final EditText edtTitle = dialogView.findViewById(R.id.edtAttendanceTitle);
+        final EditText edtLateTime = dialogView.findViewById(R.id.edtLateTime);
+        new AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setPositiveButton("Set", (dialog, which) -> {
+                String title = edtTitle.getText().toString().trim();
+                String lateTime = edtLateTime.getText().toString().trim();
+                if (TextUtils.isEmpty(title) || TextUtils.isEmpty(lateTime)) {
+                    Toast.makeText(this, "All fields are required.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                markPreviousAbsenteesAndSetNewDay(title, lateTime);
+            })
+            .setNegativeButton("Cancel", null).show();
+    }
+
+    private void markPreviousAbsenteesAndSetNewDay(final String newTitle, final String newLateTime) {
+        DatabaseReference attendanceDayRef = rootRef.child("attendanceDay");
+        attendanceDayRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists() && snapshot.child("title").exists()) {
+                    String previousTitle = snapshot.child("title").getValue(String.class);
+                    String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+                    DatabaseReference previousRecordsRef = rootRef.child("attendance_by_day").child(today).child(previousTitle);
+                    previousRecordsRef.orderByChild("time_out").equalTo(null).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot recordsSnapshot) {
+                            for (DataSnapshot absenteeSnapshot : recordsSnapshot.getChildren()) {
+                                absenteeSnapshot.getRef().child("status").setValue("Absent");
+                            }
+                            setNewAttendanceDay(newTitle, newLateTime);
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) { setNewAttendanceDay(newTitle, newLateTime); }
+                    });
+                } else {
+                     setNewAttendanceDay(newTitle, newLateTime);
+                }
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) { }
         });
     }
 
-    private void showSetAttendanceDayDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_set_attendance, null);
-        builder.setView(dialogView);
-        final EditText edtTitle = dialogView.findViewById(R.id.edtAttendanceTitle);
-        final EditText edtLateTime = dialogView.findViewById(R.id.edtLateTime);
-        builder.setPositiveButton("Set", (dialog, which) -> {
-            String title = edtTitle.getText().toString().trim();
-            String lateTime = edtLateTime.getText().toString().trim();
-            if (TextUtils.isEmpty(title) || TextUtils.isEmpty(lateTime)) {
-                Toast.makeText(this, "All fields are required.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            markPreviousAbsenteesAndSetNewDay(title, lateTime);
-        });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.create().show();
-    }
-
-    private void markPreviousAbsenteesAndSetNewDay(final String newTitle, final String newLateTime) {
-        // ... (This logic is assumed correct)
-    }
-
     private void setNewAttendanceDay(String title, String lateTime) {
-        // ... (This logic is assumed correct)
+        Map<String, Object> attendanceData = new HashMap<>();
+        attendanceData.put("title", title);
+        attendanceData.put("lateTime", lateTime);
+        rootRef.child("attendanceDay").setValue(attendanceData)
+            .addOnSuccessListener(aVoid -> Toast.makeText(SuperAdminDashboard.this, "New attendance session set!", Toast.LENGTH_LONG).show());
     }
 }

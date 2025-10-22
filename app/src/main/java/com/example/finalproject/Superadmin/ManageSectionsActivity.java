@@ -74,8 +74,6 @@ public class ManageSectionsActivity extends AppCompatActivity {
                         String managedBy = sectionSnapshot.child("managedBy").getValue(String.class);
                         sectionList.add(new Section(sectionName, managedBy != null ? managedBy : "Not Assigned"));
                     }
-                } else {
-                    Toast.makeText(ManageSectionsActivity.this, "No sections found. Click '+' to add.", Toast.LENGTH_SHORT).show();
                 }
                 sectionAdapter.notifyDataSetChanged();
             }
@@ -96,12 +94,16 @@ public class ManageSectionsActivity extends AppCompatActivity {
             .setView(dialogView)
             .setPositiveButton("Add", (dialog, which) -> {
                 String sectionName = edtSectionName.getText().toString().trim();
-                String selectedAdminName = (String) spinnerAdmins.getSelectedItem();
-                if (TextUtils.isEmpty(sectionName) || selectedAdminName == null) {
-                    showToast("Section name and admin are required.");
+                if (spinnerAdmins.getSelectedItem() == null) {
+                    showToast("No admins available to assign.");
                     return;
                 }
-                createNewSection(sectionName, selectedAdminName);
+                String selectedAdminFullName = spinnerAdmins.getSelectedItem().toString();
+                if (TextUtils.isEmpty(sectionName)) {
+                    showToast("Section name is required.");
+                    return;
+                }
+                createNewSection(sectionName, selectedAdminFullName);
             })
             .setNegativeButton("Cancel", null)
             .show();
@@ -119,10 +121,15 @@ public class ManageSectionsActivity extends AppCompatActivity {
                 adminNames.clear();
                 adminNameToUidMap.clear();
                 for (DataSnapshot adminSnapshot : snapshot.getChildren()) {
-                    String name = adminSnapshot.child("firstName").getValue(String.class);
+                    String firstName = adminSnapshot.child("firstName").getValue(String.class);
+                    String lastName = adminSnapshot.child("lastName").getValue(String.class);
+                    String fullName = (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
                     String uid = adminSnapshot.getKey();
-                    adminNames.add(name);
-                    adminNameToUidMap.put(name, uid);
+                    
+                    if (!fullName.trim().isEmpty()) {
+                        adminNames.add(fullName.trim());
+                        adminNameToUidMap.put(fullName.trim(), uid);
+                    }
                 }
                 spinnerAdapter.notifyDataSetChanged();
             }
@@ -131,11 +138,11 @@ public class ManageSectionsActivity extends AppCompatActivity {
         });
     }
 
-    private void createNewSection(String sectionName, String adminName) {
-        String adminUid = adminNameToUidMap.get(adminName);
+    private void createNewSection(String sectionName, String adminFullName) {
+        String adminUid = adminNameToUidMap.get(adminFullName);
         if (adminUid == null) { return; }
         Map<String, Object> sectionData = new HashMap<>();
-        sectionData.put("managedBy", adminName);
+        sectionData.put("managedBy", adminFullName);
         rootRef.child("sections").child(sectionName).setValue(sectionData).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 rootRef.child("users").child(adminUid).child("section").setValue(sectionName);
@@ -146,6 +153,7 @@ public class ManageSectionsActivity extends AppCompatActivity {
         });
     }
 
+    // --- THIS IS THE FIX: The missing methods are now restored ---
     public void addStudentsToSection(String sectionName) {
         Intent intent = new Intent(this, AddStudentsToSectionActivity.class);
         intent.putExtra("SECTION_NAME", sectionName);
@@ -153,7 +161,7 @@ public class ManageSectionsActivity extends AppCompatActivity {
     }
 
     public void viewStudentsInSection(String sectionName) {
-        Intent intent = new Intent(this, ViewStudentsInSectionActivity.class);
+        Intent intent = new Intent(this, StudentListBySectionActivity.class);
         intent.putExtra("SECTION_NAME", sectionName);
         startActivity(intent);
     }

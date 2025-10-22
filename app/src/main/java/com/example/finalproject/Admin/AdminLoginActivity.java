@@ -18,6 +18,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.finalproject.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -71,10 +73,8 @@ public class AdminLoginActivity extends AppCompatActivity {
                     resetMail.setError("Email is required.");
                     return;
                 }
-
                 progressBarDialog.setVisibility(View.VISIBLE);
                 positiveButton.setEnabled(false);
-
                 mAuth.sendPasswordResetEmail(mail).addOnCompleteListener(task -> {
                     progressBarDialog.setVisibility(View.GONE);
                     positiveButton.setEnabled(true);
@@ -105,12 +105,20 @@ public class AdminLoginActivity extends AppCompatActivity {
                 FirebaseUser firebaseUser = mAuth.getCurrentUser();
                 if (firebaseUser != null) {
                     checkRoleAndProceed(firebaseUser.getUid());
-                } else {
-                    progressBar.setVisibility(View.GONE);
                 }
             } else {
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, "Authentication Failed.", Toast.LENGTH_SHORT).show();
+                String errorMessage = "Authentication Failed.";
+                try {
+                    throw task.getException();
+                } catch (FirebaseAuthInvalidUserException e) {
+                    errorMessage = "No account found with this email.";
+                } catch (FirebaseAuthInvalidCredentialsException e) {
+                    errorMessage = "Incorrect password. Please try again.";
+                } catch (Exception e) {
+                    errorMessage = e.getMessage();
+                }
+                Toast.makeText(AdminLoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -121,9 +129,7 @@ public class AdminLoginActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 progressBar.setVisibility(View.GONE);
                 String role = snapshot.getValue(String.class);
-                
                 if ("admin".equals(role)) {
-                    Toast.makeText(AdminLoginActivity.this, "Admin Login Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(AdminLoginActivity.this, AdminDashboard.class));
                     finish();
                 } else {

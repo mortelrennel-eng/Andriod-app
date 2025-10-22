@@ -41,12 +41,12 @@ public class AdminDashboard extends AppCompatActivity {
         tvTotalStudents = findViewById(R.id.tvTotalStudentsInSection);
         tvFrequentAbsentees = findViewById(R.id.tvFrequentAbsenteesInSection);
 
-        findViewById(R.id.btnScanQr).setOnClickListener(v -> startActivity(new Intent(this, QRScannerActivity.class)));
-        findViewById(R.id.btnViewAttendance).setOnClickListener(v -> startActivity(new Intent(this, AdminViewAttendanceActivity.class)));
-        findViewById(R.id.btnViewMySection).setOnClickListener(v -> startActivity(new Intent(this, ViewMySectionActivity.class)));
+        findViewById(R.id.btnScanQr).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.admin.QRScannerActivity.class)));
+        findViewById(R.id.btnViewAttendance).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.admin.AdminViewAttendanceActivity.class)));
+        findViewById(R.id.btnViewMySection).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.admin.ViewMySectionActivity.class)));
         findViewById(R.id.btnAdminSignOut).setOnClickListener(v -> {
             mAuth.signOut();
-            startActivity(new Intent(this, AdminLoginActivity.class));
+            startActivity(new Intent(this,  com.example.finalproject.admin.AdminLoginActivity.class));
             finish();
         });
 

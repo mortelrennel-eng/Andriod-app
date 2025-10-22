@@ -1,7 +1,9 @@
 package com.example.finalproject.admin;
 
+import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -11,6 +13,8 @@ import androidx.core.content.ContextCompat;
 import com.budiyev.android.codescanner.CodeScanner;
 import com.budiyev.android.codescanner.CodeScannerView;
 import com.example.finalproject.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -18,15 +22,18 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 public class QRScannerActivity extends AppCompatActivity {
     private CodeScanner mCodeScanner;
     private DatabaseReference rootRef;
-    private static final int CAMERA_REQUEST_CODE = 101;
+    private FirebaseAuth mAuth;
+    private String adminSection;
     private static final String TAG = "QRScannerActivity";
 
     @Override
@@ -34,17 +41,16 @@ public class QRScannerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr_scanner);
 
-        rootRef = FirebaseDatabase.getInstance("https://finalproject-b08f4-default-rtdb.firebaseio.com/").getReference();
+        rootRef = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(this, new String[] {android.Manifest.permission.CAMERA}, CAMERA_REQUEST_CODE);
-        }
-
+        loadAdminSection();
+        setupPermissions();
         CodeScannerView scannerView = findViewById(R.id.scanner_view);
         mCodeScanner = new CodeScanner(this, scannerView);
 
         mCodeScanner.setDecodeCallback(result -> runOnUiThread(() -> {
-            mCodeScanner.stopPreview(); // Stop scanning to prevent multiple triggers
+            mCodeScanner.stopPreview();
             String scannedUid = result.getText();
             markAttendance(scannedUid);
         }));
@@ -52,15 +58,39 @@ public class QRScannerActivity extends AppCompatActivity {
         scannerView.setOnClickListener(view -> mCodeScanner.startPreview());
     }
 
+    private void loadAdminSection(){
+        FirebaseUser adminUser = mAuth.getCurrentUser();
+        if(adminUser != null){
+            rootRef.child("users").child(adminUser.getUid()).child("section").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    adminSection = snapshot.getValue(String.class);
+                    if(adminSection == null){
+                        showToastAndFinish("You are not assigned to a section. Cannot scan.");
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    showToastAndFinish("Failed to get your section details.");
+                }
+            });
+        }
+    }
+
     private void markAttendance(String uid) {
+        if(adminSection == null){
+            showToastAndResume("Cannot verify section. Please restart the scanner.");
+            return;
+        }
+
         rootRef.child("attendanceDay").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot attendanceDaySnap) {
-                if (!attendanceDaySnap.exists()) {
-                    showToastAndFinish("No attendance session set by Super Admin.");
+                if (!attendanceDaySnap.exists() || attendanceDaySnap.child("title").getValue(String.class) == null) {
+                    showToastAndFinish("No active attendance session set by Super Admin.");
                     return;
                 }
-
+                
                 String sessionTitle = attendanceDaySnap.child("title").getValue(String.class);
                 String lateTimeString = attendanceDaySnap.child("lateTime").getValue(String.class);
                 String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
@@ -71,13 +101,24 @@ public class QRScannerActivity extends AppCompatActivity {
                 recordRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot recordSnap) {
-                        rootRef.child("users").child(uid).child("firstName").addListenerForSingleValueEvent(new ValueEventListener() {
+                        rootRef.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
-                            public void onDataChange(@NonNull DataSnapshot nameSnap) {
-                                String studentName = nameSnap.getValue(String.class) != null ? nameSnap.getValue(String.class) : "Unknown Student";
+                            public void onDataChange(@NonNull DataSnapshot userSnap) {
+                                if (!userSnap.exists()) {
+                                    showToastAndResume("Scanned QR is not a valid user.");
+                                    return;
+                                }
+
+                                String studentSection = userSnap.child("section").getValue(String.class);
+                                if(!adminSection.equals(studentSection)){
+                                    showToastAndResume("Access Denied: Student is not in your section.");
+                                    return;
+                                }
+                                
+                                String studentName = userSnap.child("firstName").getValue(String.class);
+                                String parentContact = userSnap.child("parentContactNumber").getValue(String.class);
 
                                 if (!recordSnap.exists()) {
-                                    // --- FIRST SCAN (TIME-IN) ---
                                     String status = "On-Time";
                                     if (lateTimeString != null && currentTime.substring(0, 5).compareTo(lateTimeString) > 0) {
                                         status = "Late";
@@ -86,14 +127,18 @@ public class QRScannerActivity extends AppCompatActivity {
                                     attendanceData.put("status", status);
                                     attendanceData.put("time_in", currentTime);
                                     final String finalStatus = status;
-                                    recordRef.setValue(attendanceData).addOnCompleteListener(task -> 
-                                        showToastAndFinish(studentName + " - Time In: " + finalStatus));
+                                    recordRef.setValue(attendanceData).addOnCompleteListener(task -> {
+                                        String smsMessage = "Your child, " + studentName + ", has arrived at " + currentTime.substring(0,5) + " with status: " + finalStatus;
+                                        sendSmsToParent(parentContact, smsMessage);
+                                        showToastAndFinish(studentName + " - Time In: " + finalStatus);
+                                    });
                                 } else if (!recordSnap.hasChild("time_out")) {
-                                    // --- SECOND SCAN (TIME-OUT) ---
-                                    recordRef.child("time_out").setValue(currentTime).addOnCompleteListener(task -> 
-                                        showToastAndFinish(studentName + " - Time Out Recorded"));
+                                    recordRef.child("time_out").setValue(currentTime).addOnCompleteListener(task -> {
+                                        String smsMessage = "Your child, " + studentName + ", has left at " + currentTime.substring(0,5) + ".";
+                                        sendSmsToParent(parentContact, smsMessage);
+                                        showToastAndFinish(studentName + " - Time Out Recorded");
+                                    });
                                 } else {
-                                    // --- THIRD SCAN (ALREADY COMPLETED) ---
                                     showToastAndResume("Attendance for " + studentName + " already completed.");
                                 }
                             }
@@ -110,6 +155,38 @@ public class QRScannerActivity extends AppCompatActivity {
         });
     }
 
+    private void sendSmsToParent(String phoneNumber, String message) {
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            Log.d(TAG, "Parent contact number is not available. Skipping SMS.");
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+            try {
+                SmsManager.getDefault().sendTextMessage(phoneNumber, null, message, null, null);
+                Log.d(TAG, "SMS sent to " + phoneNumber);
+            } catch (Exception e) {
+                Log.e(TAG, "SMS failed to send: " + e.getMessage());
+            }
+        } else {
+            Log.d(TAG, "SEND_SMS permission not granted.");
+        }
+    }
+
+    private void setupPermissions() {
+        int cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        int smsPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS);
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        if (cameraPermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.CAMERA);
+        }
+        if (smsPermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.SEND_SMS);
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[0]), 1);
+        }
+    }
+
     private void showToastAndResume(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         new android.os.Handler().postDelayed(() -> mCodeScanner.startPreview(), 2000);
@@ -117,18 +194,22 @@ public class QRScannerActivity extends AppCompatActivity {
     
     private void showToastAndFinish(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-        finish(); // Go back to the previous activity (AdminDashboard)
+        finish();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mCodeScanner.startPreview();
+        if (mCodeScanner != null) {
+            mCodeScanner.startPreview();
+        }
     }
 
     @Override
     protected void onPause() {
-        mCodeScanner.releaseResources();
+        if (mCodeScanner != null) {
+            mCodeScanner.releaseResources();
+        }
         super.onPause();
     }
 }

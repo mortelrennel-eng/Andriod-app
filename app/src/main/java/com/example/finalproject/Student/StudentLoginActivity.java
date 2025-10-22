@@ -18,6 +18,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.finalproject.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -52,6 +54,7 @@ public class StudentLoginActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(v -> loginUser());
         txtGoToRegister.setOnClickListener(v -> startActivity(new Intent(this, RegisterStudentActivity.class)));
         txtForgotPassword.setOnClickListener(v -> showForgotPasswordDialog());
+        txtResendVerification.setOnClickListener(v -> resendVerificationEmail());
     }
 
     private void showForgotPasswordDialog() {
@@ -74,10 +77,8 @@ public class StudentLoginActivity extends AppCompatActivity {
                     resetMail.setError("Email is required.");
                     return;
                 }
-
                 progressBarDialog.setVisibility(View.VISIBLE);
                 positiveButton.setEnabled(false);
-
                 mAuth.sendPasswordResetEmail(mail).addOnCompleteListener(task -> {
                     progressBarDialog.setVisibility(View.GONE);
                     positiveButton.setEnabled(true);
@@ -96,31 +97,52 @@ public class StudentLoginActivity extends AppCompatActivity {
     private void loginUser() {
         String email = edtEmail.getText().toString().trim();
         String password = edtPassword.getText().toString().trim();
-
         if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
             Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
             return;
         }
-
         progressBar.setVisibility(View.VISIBLE);
-
         mAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this, task -> {
+                progressBar.setVisibility(View.GONE);
                 if (task.isSuccessful()) {
                     FirebaseUser user = mAuth.getCurrentUser();
                     if (user != null && user.isEmailVerified()) {
                         checkRoleAndProceed(user.getUid());
                     } else {
-                        progressBar.setVisibility(View.GONE);
-                        Toast.makeText(StudentLoginActivity.this, "Please verify your email address.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(StudentLoginActivity.this, "Login Failed: Please verify your email first.", Toast.LENGTH_LONG).show();
                         txtResendVerification.setVisibility(View.VISIBLE);
                         mAuth.signOut();
                     }
                 } else {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(StudentLoginActivity.this, "Authentication Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                    String errorMessage = "Authentication Failed.";
+                    try {
+                        throw task.getException();
+                    } catch (FirebaseAuthInvalidUserException e) {
+                        errorMessage = "No account found with this email.";
+                    } catch (FirebaseAuthInvalidCredentialsException e) {
+                        errorMessage = "Incorrect password. Please try again.";
+                    } catch (Exception e) {
+                        errorMessage = e.getMessage();
+                    }
+                    Toast.makeText(StudentLoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                 }
             });
+    }
+
+    private void resendVerificationEmail() {
+       FirebaseUser user = mAuth.getCurrentUser(); 
+        if(user != null){
+             user.sendEmailVerification().addOnCompleteListener(task -> {
+                if(task.isSuccessful()){
+                    Toast.makeText(this, "Verification email sent.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Failed to send verification email.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+             Toast.makeText(this, "Cannot send email. Please try logging in again.", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void checkRoleAndProceed(String uid) {
@@ -129,9 +151,7 @@ public class StudentLoginActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 progressBar.setVisibility(View.GONE);
                 String role = snapshot.getValue(String.class);
-                
                 if ("student".equals(role)) {
-                    Toast.makeText(StudentLoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(StudentLoginActivity.this, StudentDashboard.class));
                     finish();
                 } else {
@@ -139,7 +159,6 @@ public class StudentLoginActivity extends AppCompatActivity {
                     mAuth.signOut();
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 progressBar.setVisibility(View.GONE);
