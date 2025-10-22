@@ -49,15 +49,15 @@ public class SuperAdminDashboard extends AppCompatActivity {
         tvTotalEbooks = findViewById(R.id.tvTotalEbooks);
 
         findViewById(R.id.btnRegisterAdmin).setOnClickListener(v -> startActivity(new Intent(this, RegisterAdminActivity.class)));
-        findViewById(R.id.btnManageAdmins).setOnClickListener(v -> startActivity(new Intent(this, ManageAdminsActivity.class)));
-        findViewById(R.id.btnViewAllUsers).setOnClickListener(v -> startActivity(new Intent(this, UsersListActivity.class)));
-        findViewById(R.id.btnAddEbook).setOnClickListener(v -> startActivity(new Intent(this, AddEbookActivity.class)));
-        findViewById(R.id.btnManageEbooks).setOnClickListener(v -> startActivity(new Intent(this, EbookManagerActivity.class)));
-        findViewById(R.id.btnManageStudents).setOnClickListener(v -> startActivity(new Intent(this, ManageStudentsActivity.class)));
-        findViewById(R.id.btnManageAttendance).setOnClickListener(v -> startActivity(new Intent(this, ManageAttendanceActivity.class)));
-        findViewById(R.id.btnManageSections).setOnClickListener(v -> startActivity(new Intent(this, ManageSectionsActivity.class)));
-        findViewById(R.id.btnViewAbsences).setOnClickListener(v -> startActivity(new Intent(this, AbsenteesListActivity.class)));
-        findViewById(R.id.btnPostAnnouncement).setOnClickListener(v -> startActivity(new Intent(this, ManageAnnouncementsActivity.class)));
+        findViewById(R.id.btnManageAdmins).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.ManageAdminsActivity.class)));
+        findViewById(R.id.btnViewAllUsers).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.UsersListActivity.class)));
+        findViewById(R.id.btnAddEbook).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.AddEbookActivity.class)));
+        findViewById(R.id.btnManageEbooks).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.EbookManagerActivity.class)));
+        findViewById(R.id.btnManageStudents).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.ManageStudentsActivity.class)));
+        findViewById(R.id.btnManageAttendance).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.ManageAttendanceActivity.class)));
+        findViewById(R.id.btnManageSections).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.ManageSectionsActivity.class)));
+        findViewById(R.id.btnViewAbsences).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.AbsenteesListActivity.class)));
+        findViewById(R.id.btnPostAnnouncement).setOnClickListener(v -> startActivity(new Intent(this, com.example.finalproject.superadmin.ManageAnnouncementsActivity.class)));
         findViewById(R.id.btnSetAttendanceDay).setOnClickListener(v -> showSetAttendanceDayDialog());
         
         findViewById(R.id.btnLogout).setOnClickListener(v -> {
