@@ -3,6 +3,7 @@ package com.example.finalproject.student;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.finalproject.R;
@@ -25,8 +27,8 @@ import com.google.firebase.database.ValueEventListener;
 public class StudentLoginActivity extends AppCompatActivity {
 
     private EditText edtEmail, edtPassword;
+    private TextView txtForgotPassword, txtGoToRegister, txtResendVerification;
     private Button btnLogin;
-    private TextView txtRegister, txtResendVerification;
     private ProgressBar progressBar;
     private FirebaseAuth mAuth;
     private DatabaseReference usersRef;
@@ -41,20 +43,54 @@ public class StudentLoginActivity extends AppCompatActivity {
 
         edtEmail = findViewById(R.id.txtStudentEmail);
         edtPassword = findViewById(R.id.txtStudentPassword);
+        txtForgotPassword = findViewById(R.id.txtForgotPassword);
         btnLogin = findViewById(R.id.btnLoginStudent);
-        txtRegister = findViewById(R.id.txtGoToRegister);
+        txtGoToRegister = findViewById(R.id.txtGoToRegister);
         txtResendVerification = findViewById(R.id.txtResendVerification);
         progressBar = findViewById(R.id.progressBarStudent);
 
         btnLogin.setOnClickListener(v -> loginUser());
+        txtGoToRegister.setOnClickListener(v -> startActivity(new Intent(this, RegisterStudentActivity.class)));
+        txtForgotPassword.setOnClickListener(v -> showForgotPasswordDialog());
+    }
 
-        txtRegister.setOnClickListener(v -> {
-            startActivity(new Intent(StudentLoginActivity.this, RegisterStudentActivity.class));
-        });
+    private void showForgotPasswordDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_forgot_password, null);
+        final EditText resetMail = dialogView.findViewById(R.id.edtResetEmail);
+        final ProgressBar progressBarDialog = dialogView.findViewById(R.id.progressBarDialog);
 
-        txtResendVerification.setOnClickListener(v -> {
-            // Logic to resend verification email
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle("Reset Password")
+            .setView(dialogView)
+            .setPositiveButton("Send", null)
+            .setNegativeButton("Cancel", (d, w) -> d.dismiss())
+            .create();
+
+        dialog.setOnShowListener(dialogInterface -> {
+            Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            positiveButton.setOnClickListener(view -> {
+                String mail = resetMail.getText().toString().trim();
+                if (TextUtils.isEmpty(mail)) {
+                    resetMail.setError("Email is required.");
+                    return;
+                }
+
+                progressBarDialog.setVisibility(View.VISIBLE);
+                positiveButton.setEnabled(false);
+
+                mAuth.sendPasswordResetEmail(mail).addOnCompleteListener(task -> {
+                    progressBarDialog.setVisibility(View.GONE);
+                    positiveButton.setEnabled(true);
+                    if (task.isSuccessful()) {
+                        Toast.makeText(this, "Reset link sent to your email.", Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                    } else {
+                        Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            });
         });
+        dialog.show();
     }
 
     private void loginUser() {
@@ -94,7 +130,6 @@ public class StudentLoginActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 String role = snapshot.getValue(String.class);
                 
-                // --- THIS IS THE FIX: Check if role is 'student' ---
                 if ("student".equals(role)) {
                     Toast.makeText(StudentLoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(StudentLoginActivity.this, StudentDashboard.class));

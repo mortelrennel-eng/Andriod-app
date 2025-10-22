@@ -1,44 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true"
-    android:padding="24dp">
+    android:padding="24dp"
+    tools:context=".superadmin.SuperAdminLoginActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
         android:orientation="vertical"
         android:gravity="center_horizontal">
-
-        <ImageView
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:src="@mipmap/ic_launcher"
-            android:contentDescription="@string/app_name"
-            android:layout_marginTop="8dp"
-            app:tint="@color/primary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Super Admin Login"
-            android:textSize="20sp"
-            android:textColor="@color/text_primary"
-            android:layout_marginTop="12dp"
+            android:text="Super Admin Portal"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <EditText
             android:id="@+id/txtSuperAdminEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:hint="Email"
-            android:inputType="textEmailAddress"
-            android:background="@drawable/edittext_background"
-            android:padding="14dp" />
+            android:layout_marginTop="24dp"
+            android:hint="Email" />
 
         <EditText
             android:id="@+id/txtSuperAdminPassword"
@@ -46,25 +33,30 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:hint="Password"
-            android:inputType="textPassword"
-            android:background="@drawable/edittext_background"
-            android:padding="14dp" />
+            android:inputType="textPassword" />
+
+        <TextView
+            android:id="@+id/txtForgotPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:text="Forgot Password?"
+            android:textColor="@color/primary" />
 
         <Button
             android:id="@+id/btnLoginSuperAdmin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Sign In"
-            android:background="@drawable/button_primary"
-            android:textColor="@color/white"/>
+            android:layout_marginTop="16dp"
+            android:text="Sign In" />
 
         <ProgressBar
             android:id="@+id/progressBar"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="14dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:visibility="gone" />
 
     </LinearLayout>
-</ScrollView>
+</RelativeLayout>

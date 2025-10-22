@@ -3,13 +3,16 @@ package com.example.finalproject.superadmin;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.finalproject.R;
@@ -24,6 +27,7 @@ import com.google.firebase.database.ValueEventListener;
 public class SuperAdminLoginActivity extends AppCompatActivity {
 
     private EditText txtEmail, txtPassword;
+    private TextView txtForgotPassword;
     private Button btnLogin;
     private ProgressBar progressBar;
     private FirebaseAuth mAuth;
@@ -34,15 +38,56 @@ public class SuperAdminLoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_super_admin_login);
 
-        txtEmail = findViewById(R.id.txtSuperAdminEmail);
-        txtPassword = findViewById(R.id.txtSuperAdminPassword);
-        btnLogin = findViewById(R.id.btnLoginSuperAdmin);
-        progressBar = findViewById(R.id.progressBar);
-
         mAuth = FirebaseAuth.getInstance();
         usersRef = FirebaseDatabase.getInstance().getReference("users");
 
+        txtEmail = findViewById(R.id.txtSuperAdminEmail);
+        txtPassword = findViewById(R.id.txtSuperAdminPassword);
+        txtForgotPassword = findViewById(R.id.txtForgotPassword);
+        btnLogin = findViewById(R.id.btnLoginSuperAdmin);
+        progressBar = findViewById(R.id.progressBar);
+
         btnLogin.setOnClickListener(v -> loginSuperAdmin());
+        txtForgotPassword.setOnClickListener(v -> showForgotPasswordDialog());
+    }
+
+    private void showForgotPasswordDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_forgot_password, null);
+        final EditText resetMail = dialogView.findViewById(R.id.edtResetEmail);
+        final ProgressBar progressBarDialog = dialogView.findViewById(R.id.progressBarDialog);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle("Reset Password")
+            .setView(dialogView)
+            .setPositiveButton("Send", null)
+            .setNegativeButton("Cancel", (d, w) -> d.dismiss())
+            .create();
+
+        dialog.setOnShowListener(dialogInterface -> {
+            Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            positiveButton.setOnClickListener(view -> {
+                String mail = resetMail.getText().toString().trim();
+                if (TextUtils.isEmpty(mail)) {
+                    resetMail.setError("Email is required.");
+                    return;
+                }
+
+                progressBarDialog.setVisibility(View.VISIBLE);
+                positiveButton.setEnabled(false);
+
+                mAuth.sendPasswordResetEmail(mail).addOnCompleteListener(task -> {
+                    progressBarDialog.setVisibility(View.GONE);
+                    positiveButton.setEnabled(true);
+                    if (task.isSuccessful()) {
+                        Toast.makeText(this, "Reset link sent to your email.", Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                    } else {
+                        Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            });
+        });
+        dialog.show();
     }
 
     private void loginSuperAdmin() {
@@ -77,14 +122,13 @@ public class SuperAdminLoginActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 String role = snapshot.getValue(String.class);
                 
-                // --- THIS IS THE FIX: Check if role is 'superadmin' ---
                 if ("superadmin".equals(role)) {
                     Toast.makeText(SuperAdminLoginActivity.this, "Super Admin Login Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(SuperAdminLoginActivity.this, SuperAdminDashboard.class));
                     finish();
                 } else {
                     Toast.makeText(SuperAdminLoginActivity.this, "Access Denied. Not a Super Admin account.", Toast.LENGTH_LONG).show();
-                    mAuth.signOut(); // Sign out the wrongly logged-in user
+                    mAuth.signOut();
                 }
             }
 
