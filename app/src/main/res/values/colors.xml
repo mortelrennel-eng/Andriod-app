@@ -24,4 +24,15 @@
     <color name="textPrimary">@color/text_primary</color>
     <color name="textSecondary">@color/text_secondary</color> <!-- Added this line -->
 
+    <color name="bg_light">#F4F5F7</color>
+
+
+    <color name="secondary_dark">#0EA5E9</color>
+    <color name="accent_dark">#DC2626</color>
+
+    <color name="text_gray">#6B7280</color>
+    <color name="divider">#E5E7EB</color>
+    <color name="red_dark">#B91C1C</color>
+
+
 </resources>

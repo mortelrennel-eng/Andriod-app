@@ -1,106 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center_horizontal"
-    android:background="@color/background"
-    android:padding="16dp"
+    android:background="@color/bg_light"
+    android:fillViewport="true"
     tools:context=".admin.AdminDashboard">
 
-    <TextView
-        android:id="@+id/tvAdminWelcome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Welcome, Admin"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:layout_marginBottom="24dp"/>
-
-    <!-- THIS IS THE NEW STATS PANEL -->
-    <androidx.cardview.widget.CardView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        android:layout_marginBottom="24dp">
-        <LinearLayout
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="20dp">
+
+        <!-- Header -->
+        <TextView
+            android:id="@+id/tvAdminWelcome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Welcome, Admin"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Stats Card -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="16dp">
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="3dp"
+            android:backgroundTint="@color/white">
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
+                android:orientation="horizontal"
+                android:padding="14dp"
                 android:gravity="center">
-                <TextView
-                    android:id="@+id/tvTotalStudentsInSection"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/primary"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="My Students"/>
-            </LinearLayout>
 
-            <LinearLayout
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/tvTotalStudentsInSection"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary_dark" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="My Students"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_gray" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="40dp"
+                    android:background="@color/divider" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/tvFrequentAbsenteesInSection"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/red_dark" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Absentees"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_gray" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- GRID BUTTONS -->
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:alignmentMode="alignMargins"
+            android:useDefaultMargins="true">
+
+            <Button
+                android:id="@+id/btnScanQr"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:id="@+id/tvFrequentAbsenteesInSection"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/red"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Absentees"/>
-            </LinearLayout>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+                android:layout_height="60dp"
+                android:layout_columnWeight="1"
+                android:text="Scan QR for Attendance"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/accent"
+                android:textColor="@android:color/white"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="12sp" />
 
-    <Button
-        android:id="@+id/btnScanQr"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scan QR for Attendance" />
+            <Button
+                android:id="@+id/btnViewAttendance"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_columnWeight="1"
+                android:text="View Section Attendance"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/accent"
+                android:textColor="@android:color/white"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="12sp" />
 
-    <Button
-        android:id="@+id/btnViewAttendance"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="View Section Attendance" />
+            <Button
+                android:id="@+id/btnViewMySection"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_columnWeight="1"
+                android:text="View My Section"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/accent"
+                android:textColor="@android:color/white"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="12sp" />
 
-    <Button
-        android:id="@+id/btnViewMySection"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="View My Section" />
+            <Button
+                android:id="@+id/btnAdminSignOut"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_columnWeight="1"
+                android:text="Sign Out"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/accent_dark"
+                android:textColor="@android:color/white"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="12sp" />
+        </GridLayout>
 
-    <Button
-        android:id="@+id/btnAdminSignOut"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="Sign Out"
-        android:backgroundTint="@color/accent"/>
-
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

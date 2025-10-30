@@ -3,7 +3,6 @@ package com.example.finalproject.admin;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -116,7 +115,6 @@ public class QRScannerActivity extends AppCompatActivity {
                                 }
                                 
                                 String studentName = userSnap.child("firstName").getValue(String.class);
-                                String parentContact = userSnap.child("parentContactNumber").getValue(String.class);
 
                                 if (!recordSnap.exists()) {
                                     String status = "On-Time";
@@ -128,14 +126,10 @@ public class QRScannerActivity extends AppCompatActivity {
                                     attendanceData.put("time_in", currentTime);
                                     final String finalStatus = status;
                                     recordRef.setValue(attendanceData).addOnCompleteListener(task -> {
-                                        String smsMessage = "Your child, " + studentName + ", has arrived at " + currentTime.substring(0,5) + " with status: " + finalStatus;
-                                        sendSmsToParent(parentContact, smsMessage);
                                         showToastAndFinish(studentName + " - Time In: " + finalStatus);
                                     });
                                 } else if (!recordSnap.hasChild("time_out")) {
                                     recordRef.child("time_out").setValue(currentTime).addOnCompleteListener(task -> {
-                                        String smsMessage = "Your child, " + studentName + ", has left at " + currentTime.substring(0,5) + ".";
-                                        sendSmsToParent(parentContact, smsMessage);
                                         showToastAndFinish(studentName + " - Time Out Recorded");
                                     });
                                 } else {
@@ -155,35 +149,10 @@ public class QRScannerActivity extends AppCompatActivity {
         });
     }
 
-    private void sendSmsToParent(String phoneNumber, String message) {
-        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
-            Log.d(TAG, "Parent contact number is not available. Skipping SMS.");
-            return;
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
-            try {
-                SmsManager.getDefault().sendTextMessage(phoneNumber, null, message, null, null);
-                Log.d(TAG, "SMS sent to " + phoneNumber);
-            } catch (Exception e) {
-                Log.e(TAG, "SMS failed to send: " + e.getMessage());
-            }
-        } else {
-            Log.d(TAG, "SEND_SMS permission not granted.");
-        }
-    }
-
     private void setupPermissions() {
         int cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        int smsPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS);
-        List<String> listPermissionsNeeded = new ArrayList<>();
         if (cameraPermission != PackageManager.PERMISSION_GRANTED) {
-            listPermissionsNeeded.add(Manifest.permission.CAMERA);
-        }
-        if (smsPermission != PackageManager.PERMISSION_GRANTED) {
-            listPermissionsNeeded.add(Manifest.permission.SEND_SMS);
-        }
-        if (!listPermissionsNeeded.isEmpty()) {
-            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[0]), 1);
+             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 1);
         }
     }
 
